@@ -1,10 +1,9 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { mockBookings, mockCustomers, mockVehicles } from '@/lib/mock-data';
 import { Booking, BookingStatus } from '@/lib/types';
 import { Edit } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -13,6 +12,8 @@ import { format } from 'date-fns';
 import BookingForm from './BookingForm';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { getBookings, getCustomers, getVehicles, saveBooking } from '@/lib/storage-service';
+import { useToast } from '@/hooks/use-toast';
 
 const getBadgeColorForStatus = (status: string) => {
   switch (status) {
@@ -30,22 +31,33 @@ const getBadgeColorForStatus = (status: string) => {
 };
 
 const BookingTable = () => {
-  const [bookings, setBookings] = useState<Booking[]>(mockBookings);
-  const [filteredBookings, setFilteredBookings] = useState<Booking[]>(mockBookings);
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [filteredBookings, setFilteredBookings] = useState<Booking[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    // Load bookings from local storage
+    const loadedBookings = getBookings();
+    setBookings(loadedBookings);
+    setFilteredBookings(loadedBookings);
+  }, []);
 
   const applyFilters = () => {
     let filtered = [...bookings];
+    
+    // Get customers for filtering by name
+    const customers = getCustomers();
 
     // Apply search filter
     if (searchTerm) {
       filtered = filtered.filter(booking => {
-        const customer = mockCustomers.find(c => c.id === booking.customerId);
+        const customer = customers.find(c => c.id === booking.customerId);
         return customer?.name.toLowerCase().includes(searchTerm.toLowerCase());
       });
     }
@@ -104,6 +116,10 @@ const BookingTable = () => {
   };
 
   const handleBookingUpdate = (updatedBooking: Booking) => {
+    // Save to local storage
+    saveBooking(updatedBooking);
+    
+    // Update local state
     const updatedBookings = bookings.map(booking => 
       booking.id === updatedBooking.id ? updatedBooking : booking
     );
@@ -111,6 +127,11 @@ const BookingTable = () => {
     setBookings(updatedBookings);
     setFilteredBookings(updatedBookings);
     setIsDialogOpen(false);
+    
+    toast({
+      title: "Booking updated",
+      description: "Booking has been updated successfully."
+    });
   };
 
   const handleAddNewBooking = () => {
@@ -119,13 +140,24 @@ const BookingTable = () => {
   };
 
   const handleBookingCreate = (newBooking: Booking) => {
+    // Save to local storage
+    saveBooking(newBooking);
+    
+    // Update local state
     const updatedBookings = [...bookings, newBooking];
     setBookings(updatedBookings);
     setFilteredBookings(updatedBookings);
     setIsDialogOpen(false);
+    
+    toast({
+      title: "Booking created",
+      description: "New booking has been created successfully."
+    });
   };
 
   const statusOptions: BookingStatus[] = ['pending', 'ongoing', 'completed', 'cancelled'];
+  const customers = getCustomers();
+  const vehicles = getVehicles();
 
   return (
     <div>
@@ -225,8 +257,8 @@ const BookingTable = () => {
           </TableHeader>
           <TableBody>
             {filteredBookings.map(booking => {
-              const customer = mockCustomers.find(c => c.id === booking.customerId);
-              const vehicle = mockVehicles.find(v => v.id === booking.vehicleId);
+              const customer = customers.find(c => c.id === booking.customerId);
+              const vehicle = vehicles.find(v => v.id === booking.vehicleId);
               
               return (
                 <TableRow key={booking.id} className="hover:bg-muted/50">

@@ -14,8 +14,6 @@ const Index = () => {
         const user = JSON.parse(userString);
         if (user.role === 'admin') {
           navigate('/dashboard');
-        } else if (user.role === 'customer') {
-          navigate('/customer-dashboard');
         }
       } catch (e) {
         // Invalid user data in localStorage, show login page

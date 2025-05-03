@@ -1,10 +1,11 @@
 
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Booking } from "@/lib/types";
-import { mockBookings, mockCustomers, mockVehicles } from "@/lib/mock-data";
 import { format } from "date-fns";
+import { getBookings, getCustomers, getVehicles } from '@/lib/storage-service';
 
 const getBadgeColorForStatus = (status: string) => {
   switch (status) {
@@ -22,10 +23,21 @@ const getBadgeColorForStatus = (status: string) => {
 };
 
 const RecentBookingsTable = () => {
-  // Get most recent 5 bookings
-  const recentBookings = [...mockBookings]
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    .slice(0, 5);
+  const [recentBookings, setRecentBookings] = useState<Booking[]>([]);
+  const [customers, setCustomers] = useState([]);
+  const [vehicles, setVehicles] = useState([]);
+  
+  useEffect(() => {
+    // Get most recent 5 bookings from local storage
+    const bookings = getBookings();
+    const sortedBookings = [...bookings]
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 5);
+      
+    setRecentBookings(sortedBookings);
+    setCustomers(getCustomers());
+    setVehicles(getVehicles());
+  }, []);
 
   return (
     <Card className="col-span-2">
@@ -46,8 +58,8 @@ const RecentBookingsTable = () => {
           </TableHeader>
           <TableBody>
             {recentBookings.map((booking) => {
-              const customer = mockCustomers.find(c => c.id === booking.customerId);
-              const vehicle = mockVehicles.find(v => v.id === booking.vehicleId);
+              const customer = customers.find((c: any) => c.id === booking.customerId);
+              const vehicle = vehicles.find((v: any) => v.id === booking.vehicleId);
               
               return (
                 <TableRow key={booking.id}>
@@ -64,6 +76,11 @@ const RecentBookingsTable = () => {
                 </TableRow>
               );
             })}
+            {recentBookings.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={6} className="h-12 text-center">No bookings found</TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </CardContent>

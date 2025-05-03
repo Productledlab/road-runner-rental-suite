@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -11,11 +11,12 @@ import {
   SelectTrigger,
   SelectValue, 
 } from '@/components/ui/select';
-import { mockVehicles } from '@/lib/mock-data';
 import { Vehicle, VehicleStatus, VehicleType, FuelType } from '@/lib/types';
 import { Edit, Archive } from 'lucide-react';
 import VehicleForm from './VehicleForm';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { getVehicles, saveVehicle, archiveVehicle } from '@/lib/storage-service';
+import { useToast } from '@/hooks/use-toast';
 
 const statusColors = {
   available: 'bg-green-100 text-green-800',
@@ -25,13 +26,21 @@ const statusColors = {
 };
 
 const VehicleTable = () => {
-  const [vehicles, setVehicles] = useState<Vehicle[]>(mockVehicles);
-  const [filteredVehicles, setFilteredVehicles] = useState<Vehicle[]>(mockVehicles);
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [filteredVehicles, setFilteredVehicles] = useState<Vehicle[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [selectedType, setSelectedType] = useState<string>('all');
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const { toast } = useToast();
+  
+  useEffect(() => {
+    // Load vehicles from local storage
+    const loadedVehicles = getVehicles();
+    setVehicles(loadedVehicles);
+    setFilteredVehicles(loadedVehicles);
+  }, []);
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const term = e.target.value.toLowerCase();
@@ -72,6 +81,9 @@ const VehicleTable = () => {
   };
 
   const handleArchive = (vehicleId: string) => {
+    archiveVehicle(vehicleId);
+    
+    // Update local state
     const updatedVehicles = vehicles.map(vehicle => 
       vehicle.id === vehicleId 
         ? { ...vehicle, status: 'archived' as VehicleStatus } 
@@ -81,6 +93,11 @@ const VehicleTable = () => {
     setVehicles(updatedVehicles);
     // Apply current filters to the updated list
     applyFilters(searchTerm, selectedStatus, selectedType);
+    
+    toast({
+      title: "Vehicle archived",
+      description: "The vehicle has been moved to the archive."
+    });
   };
 
   const handleEdit = (vehicle: Vehicle) => {
@@ -89,6 +106,10 @@ const VehicleTable = () => {
   };
 
   const handleVehicleUpdate = (updatedVehicle: Vehicle) => {
+    // Save to local storage
+    saveVehicle(updatedVehicle);
+    
+    // Update local state
     const updatedVehicles = vehicles.map(vehicle => 
       vehicle.id === updatedVehicle.id ? updatedVehicle : vehicle
     );
@@ -96,6 +117,11 @@ const VehicleTable = () => {
     setVehicles(updatedVehicles);
     setFilteredVehicles(updatedVehicles);
     setIsDialogOpen(false);
+    
+    toast({
+      title: "Vehicle updated",
+      description: "Vehicle information has been updated successfully."
+    });
   };
 
   const statusOptions: VehicleStatus[] = ['available', 'booked', 'maintenance'];

@@ -5,15 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-
-type UserRole = 'admin' | 'customer';
 
 const LoginForm = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [role, setRole] = useState<UserRole>('admin');
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -27,25 +23,18 @@ const LoginForm = () => {
       
       // Simple validation for demo purposes
       if (email && password) {
-        // Mock authentication logic
-        if (role === 'admin' && email === 'admin@roadrunner.com' && password === 'admin123') {
+        // Mock authentication logic - only admin is supported now
+        if (email === 'admin@roadrunner.com' && password === 'admin123') {
           localStorage.setItem('user', JSON.stringify({ role: 'admin', email }));
           toast({
             title: "Login successful",
             description: "Welcome to Road Runner Rentals admin portal",
           });
           navigate('/dashboard');
-        } else if (role === 'customer' && email === 'customer@example.com' && password === 'customer123') {
-          localStorage.setItem('user', JSON.stringify({ role: 'customer', email }));
-          toast({
-            title: "Login successful",
-            description: "Welcome to Road Runner Rentals",
-          });
-          navigate('/customer-dashboard');
         } else {
           toast({
             title: "Login failed",
-            description: "Invalid credentials. For demo: use admin@roadrunner.com/admin123 or customer@example.com/customer123",
+            description: "Invalid credentials. Use admin@roadrunner.com/admin123",
             variant: "destructive",
           });
         }
@@ -63,16 +52,9 @@ const LoginForm = () => {
     <Card className="w-full max-w-md mx-auto">
       <CardHeader>
         <CardTitle className="text-center text-2xl font-bold">Road Runner Rentals</CardTitle>
-        <CardDescription className="text-center">Sign in to access your account</CardDescription>
+        <CardDescription className="text-center">Sign in to access the admin portal</CardDescription>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue="admin" onValueChange={(value) => setRole(value as UserRole)}>
-          <TabsList className="grid w-full grid-cols-2 mb-6">
-            <TabsTrigger value="admin">Admin</TabsTrigger>
-            <TabsTrigger value="customer">Customer</TabsTrigger>
-          </TabsList>
-        </Tabs>
-        
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <label htmlFor="email" className="form-label">Email</label>
@@ -109,7 +91,6 @@ const LoginForm = () => {
         <div className="text-sm text-center text-gray-500">
           <p>Demo credentials:</p>
           <p>Admin: admin@roadrunner.com / admin123</p>
-          <p>Customer: customer@example.com / customer123</p>
         </div>
       </CardFooter>
     </Card>

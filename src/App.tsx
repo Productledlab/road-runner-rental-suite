@@ -74,16 +74,6 @@ const App = () => (
               </AuthGuard>
             } 
           />
-
-          {/* Customer Dashboard - Will be implemented in future version */}
-          <Route 
-            path="/customer-dashboard" 
-            element={
-              <AuthGuard allowedRoles={['customer']} redirectTo="/">
-                <NotFound />
-              </AuthGuard>
-            }
-          />
           
           {/* Catch-all route */}
           <Route path="*" element={<NotFound />} />

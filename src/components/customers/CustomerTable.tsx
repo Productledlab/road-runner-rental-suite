@@ -1,21 +1,30 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { mockCustomers } from '@/lib/mock-data';
 import { Customer } from '@/lib/types';
 import { Edit } from 'lucide-react';
 import CustomerForm from './CustomerForm';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { format } from 'date-fns';
+import { getCustomers, saveCustomer } from '@/lib/storage-service';
+import { useToast } from '@/hooks/use-toast';
 
 const CustomerTable = () => {
-  const [customers, setCustomers] = useState<Customer[]>(mockCustomers);
-  const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>(mockCustomers);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    // Load customers from local storage
+    const loadedCustomers = getCustomers();
+    setCustomers(loadedCustomers);
+    setFilteredCustomers(loadedCustomers);
+  }, []);
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const term = e.target.value.toLowerCase();
@@ -40,6 +49,10 @@ const CustomerTable = () => {
   };
 
   const handleCustomerUpdate = (updatedCustomer: Customer) => {
+    // Save to local storage
+    saveCustomer(updatedCustomer);
+    
+    // Update local state
     const updatedCustomers = customers.map(customer => 
       customer.id === updatedCustomer.id ? updatedCustomer : customer
     );
@@ -47,6 +60,11 @@ const CustomerTable = () => {
     setCustomers(updatedCustomers);
     setFilteredCustomers(updatedCustomers);
     setIsDialogOpen(false);
+    
+    toast({
+      title: "Customer updated",
+      description: "Customer information has been updated successfully."
+    });
   };
 
   const handleAddNewCustomer = () => {
@@ -55,10 +73,19 @@ const CustomerTable = () => {
   };
 
   const handleCustomerCreate = (newCustomer: Customer) => {
+    // Save to local storage
+    saveCustomer(newCustomer);
+    
+    // Update local state
     const updatedCustomers = [...customers, newCustomer];
     setCustomers(updatedCustomers);
     setFilteredCustomers(updatedCustomers);
     setIsDialogOpen(false);
+    
+    toast({
+      title: "Customer added",
+      description: "New customer has been added successfully."
+    });
   };
 
   return (
