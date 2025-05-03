@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -35,7 +34,7 @@ const BookingTable = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
-  const [selectedStatus, setSelectedStatus] = useState<string>('');
+  const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -64,7 +63,7 @@ const BookingTable = () => {
     }
 
     // Apply status filter
-    if (selectedStatus) {
+    if (selectedStatus && selectedStatus !== 'all') {
       filtered = filtered.filter(booking => booking.status === selectedStatus);
     }
 
@@ -94,7 +93,7 @@ const BookingTable = () => {
     setSearchTerm('');
     setStartDate(undefined);
     setEndDate(undefined);
-    setSelectedStatus('');
+    setSelectedStatus('all');
     setFilteredBookings(bookings);
   };
 
@@ -184,7 +183,7 @@ const BookingTable = () => {
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Statuses</SelectItem>
+                <SelectItem value="all">All Statuses</SelectItem>
                 {statusOptions.map(status => (
                   <SelectItem key={status} value={status}>
                     {status.charAt(0).toUpperCase() + status.slice(1)}

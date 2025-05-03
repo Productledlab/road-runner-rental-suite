@@ -28,8 +28,8 @@ const VehicleTable = () => {
   const [vehicles, setVehicles] = useState<Vehicle[]>(mockVehicles);
   const [filteredVehicles, setFilteredVehicles] = useState<Vehicle[]>(mockVehicles);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedStatus, setSelectedStatus] = useState<string>('');
-  const [selectedType, setSelectedType] = useState<string>('');
+  const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  const [selectedType, setSelectedType] = useState<string>('all');
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -60,11 +60,11 @@ const VehicleTable = () => {
       );
     }
 
-    if (status) {
+    if (status && status !== 'all') {
       filtered = filtered.filter(vehicle => vehicle.status === status);
     }
 
-    if (type) {
+    if (type && type !== 'all') {
       filtered = filtered.filter(vehicle => vehicle.type === type);
     }
 
@@ -118,7 +118,7 @@ const VehicleTable = () => {
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Statuses</SelectItem>
+              <SelectItem value="all">All Statuses</SelectItem>
               {statusOptions.map(status => (
                 <SelectItem key={status} value={status}>
                   {status.charAt(0).toUpperCase() + status.slice(1)}
@@ -133,7 +133,7 @@ const VehicleTable = () => {
               <SelectValue placeholder="Type" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Types</SelectItem>
+              <SelectItem value="all">All Types</SelectItem>
               {typeOptions.map(type => (
                 <SelectItem key={type} value={type}>
                   {type.charAt(0).toUpperCase() + type.slice(1)}
