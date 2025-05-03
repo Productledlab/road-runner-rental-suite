@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -239,7 +240,7 @@ const BookingTable = () => {
                       {booking.status}
                     </Badge>
                   </TableCell>
-                  <TableCell>${booking.totalPrice}</TableCell>
+                  <TableCell>{booking.totalPrice} OMR</TableCell>
                   <TableCell>
                     <Button 
                       variant="outline" 

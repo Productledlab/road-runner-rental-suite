@@ -188,7 +188,7 @@ const VehicleTable = () => {
                     {vehicle.status.charAt(0).toUpperCase() + vehicle.status.slice(1)}
                   </Badge>
                 </TableCell>
-                <TableCell>${vehicle.pricePerDay}/day</TableCell>
+                <TableCell>{vehicle.pricePerDay} OMR/day</TableCell>
                 <TableCell>
                   <div className="flex gap-2">
                     <Button 

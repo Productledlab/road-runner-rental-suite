@@ -221,7 +221,7 @@ const VehicleForm = ({ initialData, onSubmit, onCancel }: VehicleFormProps) => {
         </div>
         
         <div className="space-y-2">
-          <Label htmlFor="pricePerDay">Price Per Day ($) *</Label>
+          <Label htmlFor="pricePerDay">Price Per Day (OMR) *</Label>
           <Input
             id="pricePerDay"
             name="pricePerDay"

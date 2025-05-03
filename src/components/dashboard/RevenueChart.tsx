@@ -49,7 +49,7 @@ const RevenueChart = () => {
               <XAxis dataKey={xKey} />
               <YAxis />
               <Tooltip
-                formatter={(value) => [`$${value}`, 'Revenue']}
+                formatter={(value) => [`${value} OMR`, 'Revenue']}
                 labelFormatter={(label) => `${period === 'weekly' ? 'Day' : 'Month'}: ${label}`}
               />
               <Bar dataKey="revenue" fill="#0F52BA" radius={[4, 4, 0, 0]} />

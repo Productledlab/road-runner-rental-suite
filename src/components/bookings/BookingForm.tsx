@@ -263,7 +263,7 @@ const BookingForm = ({ initialData, onSubmit, onCancel }: BookingFormProps) => {
         </div>
         
         <div className="space-y-2">
-          <Label htmlFor="totalPrice">Total Price ($) *</Label>
+          <Label htmlFor="totalPrice">Total Price (OMR) *</Label>
           <Input
             id="totalPrice"
             name="totalPrice"

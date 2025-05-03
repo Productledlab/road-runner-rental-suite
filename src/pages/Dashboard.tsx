@@ -54,7 +54,7 @@ const Dashboard = () => {
           
           <StatCard 
             title="Total Revenue"
-            value={`$${totalRevenue}`}
+            value={`${totalRevenue} OMR`}
             icon={<DollarSign className="h-5 w-5" />}
             trend={{ value: 8, isPositive: true }}
             color="purple"

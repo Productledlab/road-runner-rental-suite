@@ -60,7 +60,7 @@ const RecentBookingsTable = () => {
                       {booking.status}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-right">${booking.totalPrice}</TableCell>
+                  <TableCell className="text-right">{booking.totalPrice} OMR</TableCell>
                 </TableRow>
               );
             })}
