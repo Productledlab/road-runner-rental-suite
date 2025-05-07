@@ -1,31 +1,68 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { getBookings } from '@/lib/storage-service';
 
-// Sample data for the chart
-const weeklyData = [
-  { day: 'Mon', revenue: 1200 },
-  { day: 'Tue', revenue: 1900 },
-  { day: 'Wed', revenue: 2100 },
-  { day: 'Thu', revenue: 1500 },
-  { day: 'Fri', revenue: 2300 },
-  { day: 'Sat', revenue: 2800 },
-  { day: 'Sun', revenue: 2400 },
-];
+interface RevenueChartProps {
+  branchId?: string;
+}
 
-const monthlyData = [
-  { month: 'Jan', revenue: 15000 },
-  { month: 'Feb', revenue: 18000 },
-  { month: 'Mar', revenue: 22000 },
-  { month: 'Apr', revenue: 19500 },
-  { month: 'May', revenue: 23000 },
-  { month: 'Jun', revenue: 26000 },
-];
-
-const RevenueChart = () => {
+const RevenueChart = ({ branchId }: RevenueChartProps) => {
   const [period, setPeriod] = useState<'weekly' | 'monthly'>('weekly');
+  const [weeklyData, setWeeklyData] = useState<any[]>([]);
+  const [monthlyData, setMonthlyData] = useState<any[]>([]);
+  
+  useEffect(() => {
+    generateChartData(branchId);
+  }, [branchId]);
+  
+  const generateChartData = (branchId?: string) => {
+    const bookings = getBookings(branchId);
+    
+    // Generate weekly data
+    const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const weeklyRevenue = daysOfWeek.map(day => ({ day, revenue: 0 }));
+    
+    // Generate monthly data
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const monthlyRevenue = months.map(month => ({ month, revenue: 0 }));
+    
+    bookings.forEach((booking: any) => {
+      if (booking.status === 'completed') {
+        const completionDate = new Date(booking.updatedAt);
+        const dayOfWeek = daysOfWeek[completionDate.getDay()];
+        const month = months[completionDate.getMonth()];
+        
+        // Update weekly revenue
+        const weekDayIndex = weeklyRevenue.findIndex(item => item.day === dayOfWeek);
+        if (weekDayIndex !== -1) {
+          weeklyRevenue[weekDayIndex].revenue += booking.totalPrice;
+        }
+        
+        // Update monthly revenue
+        const monthIndex = monthlyRevenue.findIndex(item => item.month === month);
+        if (monthIndex !== -1) {
+          monthlyRevenue[monthIndex].revenue += booking.totalPrice;
+        }
+      }
+    });
+    
+    // Reorder weekly data starting from Monday
+    const orderedWeeklyData = [
+      weeklyRevenue[1], // Mon
+      weeklyRevenue[2], // Tue
+      weeklyRevenue[3], // Wed
+      weeklyRevenue[4], // Thu
+      weeklyRevenue[5], // Fri
+      weeklyRevenue[6], // Sat
+      weeklyRevenue[0], // Sun
+    ];
+    
+    setWeeklyData(orderedWeeklyData);
+    setMonthlyData(monthlyRevenue);
+  };
   
   const data = period === 'weekly' ? weeklyData : monthlyData;
   const xKey = period === 'weekly' ? 'day' : 'month';

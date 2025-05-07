@@ -1,14 +1,25 @@
 
+import { useState } from 'react';
 import AppLayout from "@/components/layout/AppLayout";
 import CustomerTable from "@/components/customers/CustomerTable";
+import BranchSelector from "@/components/layout/BranchSelector";
 
 const CustomersPage = () => {
+  const [selectedBranch, setSelectedBranch] = useState<string | null>(null);
+
+  const handleBranchChange = (branchId: string) => {
+    setSelectedBranch(branchId);
+  };
+
   return (
     <AppLayout>
       <div className="space-y-6">
-        <h1 className="page-title">Customers</h1>
+        <div className="flex justify-between items-center">
+          <h1 className="page-title">Customers</h1>
+          <BranchSelector onChange={handleBranchChange} />
+        </div>
         
-        <CustomerTable />
+        <CustomerTable branchId={selectedBranch === 'all' ? undefined : selectedBranch || undefined} />
       </div>
     </AppLayout>
   );

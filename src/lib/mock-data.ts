@@ -1,11 +1,29 @@
+import { Vehicle, Customer, Booking, Branch } from './types';
 
-import { Vehicle, Customer, Booking } from './types';
+// Mock branches
+export const mockBranches: Branch[] = [
+  {
+    id: 'branch-1',
+    name: 'Main Branch',
+    location: 'Muscat',
+  },
+  {
+    id: 'branch-2',
+    name: 'Airport Branch',
+    location: 'Seeb',
+  },
+  {
+    id: 'branch-3',
+    name: 'Tourist Branch',
+    location: 'Salalah',
+  }
+];
 
 // Mock Vehicles Data
 export const mockVehicles: Vehicle[] = [
   {
-    id: '1',
-    carNumber: 'ABC123',
+    id: 'v1',
+    carNumber: 'OMA1234',
     make: 'Toyota',
     model: 'Camry',
     year: 2022,
@@ -13,86 +31,37 @@ export const mockVehicles: Vehicle[] = [
     fuelType: 'petrol',
     type: 'sedan',
     status: 'available',
-    pricePerDay: 55,
-    image: 'https://images.unsplash.com/photo-1580273916550-e323be2ae537?q=80&w=400&auto=format&fit=crop'
+    pricePerDay: 25,
+    currentKm: 12500,
+    images: []
   },
   {
-    id: '2',
-    carNumber: 'DEF456',
+    id: 'v2',
+    carNumber: 'OMA5678',
     make: 'Honda',
     model: 'CR-V',
     year: 2021,
-    color: 'Blue',
+    color: 'White',
     fuelType: 'petrol',
     type: 'suv',
-    status: 'booked',
-    pricePerDay: 65,
-    image: 'https://images.unsplash.com/photo-1609521263047-f8f205293f24?q=80&w=400&auto=format&fit=crop'
-  },
-  {
-    id: '3',
-    carNumber: 'GHI789',
-    make: 'Tesla',
-    model: 'Model 3',
-    year: 2023,
-    color: 'White',
-    fuelType: 'electric',
-    type: 'sedan',
     status: 'available',
-    pricePerDay: 90,
-    image: 'https://images.unsplash.com/photo-1619767886558-efdc259cde1a?q=80&w=400&auto=format&fit=crop'
+    pricePerDay: 30,
+    currentKm: 8700,
+    images: []
   },
   {
-    id: '4',
-    carNumber: 'JKL012',
+    id: 'v3',
+    carNumber: 'OMA9012',
     make: 'BMW',
-    model: 'X5',
-    year: 2022,
-    color: 'Black',
-    fuelType: 'diesel',
-    type: 'luxury',
-    status: 'maintenance',
-    pricePerDay: 120,
-    image: 'https://images.unsplash.com/photo-1532581140115-3e355d1ed1de?q=80&w=400&auto=format&fit=crop'
-  },
-  {
-    id: '5',
-    carNumber: 'MNO345',
-    make: 'Ford',
-    model: 'Focus',
-    year: 2020,
-    color: 'Red',
-    fuelType: 'petrol',
-    type: 'hatchback',
-    status: 'available',
-    pricePerDay: 45,
-    image: 'https://images.unsplash.com/photo-1606611013016-308138517d7a?q=80&w=400&auto=format&fit=crop'
-  },
-  {
-    id: '6',
-    carNumber: 'PQR678',
-    make: 'Mercedes',
-    model: 'E-Class',
+    model: '3 Series',
     year: 2023,
-    color: 'Silver',
+    color: 'Black',
     fuelType: 'hybrid',
     type: 'luxury',
-    status: 'available',
-    pricePerDay: 110,
-    image: 'https://images.unsplash.com/photo-1603584173870-7f23fdae1b7a?q=80&w=400&auto=format&fit=crop'
-  },
-  {
-    id: '7',
-    carNumber: 'STU901',
-    make: 'Hyundai',
-    model: 'Tucson',
-    year: 2021,
-    color: 'Green',
-    fuelType: 'petrol',
-    type: 'suv',
     status: 'booked',
-    pricePerDay: 60,
-    image: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?q=80&w=400&auto=format&fit=crop'
+    pricePerDay: 55,
+    currentKm: 5200,
+    images: []
   }
 ];
 
@@ -127,108 +96,82 @@ export const mockArchivedVehicles: Vehicle[] = [
 // Mock Customers Data
 export const mockCustomers: Customer[] = [
   {
-    id: '1',
-    name: 'John Doe',
-    passport: 'AB1234567',
-    visa: 'V123456789',
-    phone: '+1 123-456-7890',
-    email: 'john.doe@example.com',
-    address: '123 Main St, City, Country',
-    dateAdded: '2023-01-15'
+    id: 'c1',
+    name: 'Ahmed Al Balushi',
+    passport: 'A123456',
+    phone: '+968 9123 4567',
+    email: 'ahmed@example.com',
+    dateAdded: '2023-01-15',
+    branchId: 'branch-1',
+    type: 'returning'
   },
   {
-    id: '2',
-    name: 'Jane Smith',
-    passport: 'CD7654321',
-    visa: 'V987654321',
-    phone: '+1 234-567-8901',
-    email: 'jane.smith@example.com',
-    address: '456 Elm St, City, Country',
-    dateAdded: '2023-02-20'
+    id: 'c2',
+    name: 'Sarah Johnson',
+    passport: 'B789012',
+    visa: 'V123456',
+    phone: '+1 555-123-4567',
+    email: 'sarah@example.com',
+    address: '123 Tourist St, Muscat',
+    dateAdded: '2023-02-20',
+    branchId: 'branch-2',
+    type: 'new'
   },
   {
-    id: '3',
-    name: 'Michael Johnson',
-    passport: 'EF9876543',
-    phone: '+1 345-678-9012',
-    email: 'michael.j@example.com',
-    dateAdded: '2023-03-10'
-  },
-  {
-    id: '4',
-    name: 'Sarah Williams',
-    passport: 'GH5432109',
-    visa: 'V543210987',
-    phone: '+1 456-789-0123',
-    email: 'sarah.w@example.com',
-    address: '789 Oak St, City, Country',
-    dateAdded: '2023-04-05'
-  },
-  {
-    id: '5',
-    name: 'David Brown',
-    passport: 'IJ4567890',
-    phone: '+1 567-890-1234',
-    email: 'david.b@example.com',
-    dateAdded: '2023-05-12'
+    id: 'c3',
+    name: 'Mohammed Al Habsi',
+    passport: 'C345678',
+    phone: '+968 9567 8901',
+    email: 'mohammed@example.com',
+    dateAdded: '2023-03-10',
+    branchId: 'branch-3',
+    type: 'returning'
   }
 ];
 
 // Mock Bookings Data
 export const mockBookings: Booking[] = [
   {
-    id: '1',
-    vehicleId: '2',
-    customerId: '1',
-    startDate: '2023-06-10T10:00:00',
-    endDate: '2023-06-15T10:00:00',
-    totalPrice: 325,
+    id: 'b1',
+    vehicleId: 'v1',
+    customerId: 'c1',
+    startDate: '2023-07-01T00:00:00.000Z',
+    endDate: '2023-07-05T00:00:00.000Z',
+    totalPrice: 125,
     status: 'completed',
-    createdAt: '2023-06-01T14:30:00',
-    updatedAt: '2023-06-15T10:30:00'
+    createdAt: '2023-06-25T00:00:00.000Z',
+    updatedAt: '2023-07-05T00:00:00.000Z',
+    branchId: 'branch-1',
+    startKm: 12000,
+    endKm: 12500,
+    kmDriven: 500
   },
   {
-    id: '2',
-    vehicleId: '7',
-    customerId: '2',
-    startDate: '2023-06-20T09:00:00',
-    endDate: '2023-06-25T09:00:00',
-    totalPrice: 300,
-    status: 'ongoing',
-    createdAt: '2023-06-15T11:45:00',
-    updatedAt: '2023-06-20T09:15:00'
+    id: 'b2',
+    vehicleId: 'v2',
+    customerId: 'c2',
+    startDate: '2023-08-10T00:00:00.000Z',
+    endDate: '2023-08-15T00:00:00.000Z',
+    totalPrice: 150,
+    status: 'completed',
+    createdAt: '2023-07-20T00:00:00.000Z',
+    updatedAt: '2023-08-15T00:00:00.000Z',
+    branchId: 'branch-2',
+    startKm: 8500,
+    endKm: 8700,
+    kmDriven: 200
   },
   {
-    id: '3',
-    vehicleId: '1',
-    customerId: '3',
-    startDate: '2023-07-05T14:00:00',
-    endDate: '2023-07-10T14:00:00',
+    id: 'b3',
+    vehicleId: 'v3',
+    customerId: 'c3',
+    startDate: '2023-09-20T00:00:00.000Z',
+    endDate: '2023-09-25T00:00:00.000Z',
     totalPrice: 275,
-    status: 'pending',
-    createdAt: '2023-06-25T16:20:00',
-    updatedAt: '2023-06-25T16:20:00'
-  },
-  {
-    id: '4',
-    vehicleId: '3',
-    customerId: '4',
-    startDate: '2023-06-18T12:00:00',
-    endDate: '2023-06-19T12:00:00',
-    totalPrice: 90,
-    status: 'cancelled',
-    createdAt: '2023-06-10T09:30:00',
-    updatedAt: '2023-06-11T15:45:00'
-  },
-  {
-    id: '5',
-    vehicleId: '6',
-    customerId: '5',
-    startDate: '2023-07-15T11:00:00',
-    endDate: '2023-07-20T11:00:00',
-    totalPrice: 550,
-    status: 'pending',
-    createdAt: '2023-06-30T13:15:00',
-    updatedAt: '2023-06-30T13:15:00'
+    status: 'ongoing',
+    createdAt: '2023-09-15T00:00:00.000Z',
+    updatedAt: '2023-09-20T00:00:00.000Z',
+    branchId: 'branch-3',
+    startKm: 5200
   }
 ];

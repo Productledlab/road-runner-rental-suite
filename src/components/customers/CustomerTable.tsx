@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Customer } from '@/lib/types';
@@ -8,10 +9,14 @@ import { Edit } from 'lucide-react';
 import CustomerForm from './CustomerForm';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { format } from 'date-fns';
-import { getCustomers, saveCustomer } from '@/lib/storage-service';
+import { getCustomers, saveCustomer, getCurrentBranch } from '@/lib/storage-service';
 import { useToast } from '@/hooks/use-toast';
 
-const CustomerTable = () => {
+interface CustomerTableProps {
+  branchId?: string;
+}
+
+const CustomerTable = ({ branchId }: CustomerTableProps) => {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -21,10 +26,10 @@ const CustomerTable = () => {
 
   useEffect(() => {
     // Load customers from local storage
-    const loadedCustomers = getCustomers();
+    const loadedCustomers = getCustomers(branchId);
     setCustomers(loadedCustomers);
     setFilteredCustomers(loadedCustomers);
-  }, []);
+  }, [branchId]);
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const term = e.target.value.toLowerCase();
@@ -49,12 +54,18 @@ const CustomerTable = () => {
   };
 
   const handleCustomerUpdate = (updatedCustomer: Customer) => {
+    // Ensure branch ID is preserved
+    const customerToSave = {
+      ...updatedCustomer,
+      branchId: updatedCustomer.branchId || getCurrentBranch()
+    };
+    
     // Save to local storage
-    saveCustomer(updatedCustomer);
+    saveCustomer(customerToSave);
     
     // Update local state
     const updatedCustomers = customers.map(customer => 
-      customer.id === updatedCustomer.id ? updatedCustomer : customer
+      customer.id === customerToSave.id ? customerToSave : customer
     );
     
     setCustomers(updatedCustomers);
@@ -73,11 +84,18 @@ const CustomerTable = () => {
   };
 
   const handleCustomerCreate = (newCustomer: Customer) => {
+    // Set branch ID
+    const customerToSave = {
+      ...newCustomer,
+      branchId: getCurrentBranch(),
+      type: 'new' // New customers start as 'new'
+    };
+    
     // Save to local storage
-    saveCustomer(newCustomer);
+    saveCustomer(customerToSave);
     
     // Update local state
-    const updatedCustomers = [...customers, newCustomer];
+    const updatedCustomers = [...customers, customerToSave];
     setCustomers(updatedCustomers);
     setFilteredCustomers(updatedCustomers);
     setIsDialogOpen(false);
@@ -115,7 +133,7 @@ const CustomerTable = () => {
               <TableHead>Email</TableHead>
               <TableHead>Phone</TableHead>
               <TableHead>Passport</TableHead>
-              <TableHead>Visa Number</TableHead>
+              <TableHead>Type</TableHead>
               <TableHead>Date Added</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
@@ -127,7 +145,11 @@ const CustomerTable = () => {
                 <TableCell>{customer.email}</TableCell>
                 <TableCell>{customer.phone}</TableCell>
                 <TableCell>{customer.passport}</TableCell>
-                <TableCell>{customer.visa || 'N/A'}</TableCell>
+                <TableCell>
+                  <Badge className={customer.type === 'new' ? "bg-blue-100 text-blue-800" : "bg-green-100 text-green-800"}>
+                    {customer.type}
+                  </Badge>
+                </TableCell>
                 <TableCell>{format(new Date(customer.dateAdded), 'MMM dd, yyyy')}</TableCell>
                 <TableCell>
                   <Button 

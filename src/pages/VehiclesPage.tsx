@@ -1,17 +1,19 @@
 
+import { useState } from "react";
 import AppLayout from "@/components/layout/AppLayout";
 import VehicleTable from "@/components/vehicles/VehicleTable";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import VehicleForm from "@/components/vehicles/VehicleForm";
 import { Vehicle } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { saveVehicle } from "@/lib/storage-service";
+import BranchSelector from "@/components/layout/BranchSelector";
 
 const VehiclesPage = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
+  const [selectedBranch, setSelectedBranch] = useState<string | null>(null);
 
   const handleAddVehicle = (vehicle: Vehicle) => {
     // Save to local storage
@@ -23,11 +25,14 @@ const VehiclesPage = () => {
     });
     setIsDialogOpen(false);
     
-    // Force reload the table
-    // This is a hacky way to refresh the table - in a real app we would use context or state management
+    // No need to reload the page anymore
     setTimeout(() => {
       window.location.reload();
     }, 500);
+  };
+
+  const handleBranchChange = (branchId: string) => {
+    setSelectedBranch(branchId);
   };
 
   return (
@@ -35,15 +40,18 @@ const VehiclesPage = () => {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <h1 className="page-title">Vehicles</h1>
-          <Button 
-            onClick={() => setIsDialogOpen(true)}
-            className="bg-rental-600 hover:bg-rental-700 text-white"
-          >
-            Add New Vehicle
-          </Button>
+          <div className="flex items-center gap-4">
+            <BranchSelector onChange={handleBranchChange} />
+            <Button 
+              onClick={() => setIsDialogOpen(true)}
+              className="bg-rental-600 hover:bg-rental-700 text-white"
+            >
+              Add New Vehicle
+            </Button>
+          </div>
         </div>
         
-        <VehicleTable />
+        <VehicleTable branchId={selectedBranch === 'all' ? undefined : selectedBranch || undefined} />
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

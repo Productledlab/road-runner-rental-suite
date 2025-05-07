@@ -1,10 +1,11 @@
 
 import { useState, useEffect } from 'react';
-import { Customer } from '@/lib/types';
+import { Customer, CustomerType } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { DialogTitle, DialogHeader, DialogFooter } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface CustomerFormProps {
   initialData: Customer | null;
@@ -21,6 +22,8 @@ const defaultCustomer: Customer = {
   email: '',
   address: '',
   dateAdded: new Date().toISOString().split('T')[0],
+  branchId: '',
+  type: 'new'
 };
 
 const CustomerForm = ({ initialData, onSubmit, onCancel }: CustomerFormProps) => {
@@ -48,6 +51,17 @@ const CustomerForm = ({ initialData, onSubmit, onCancel }: CustomerFormProps) =>
     }));
     
     // Clear error when user types
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: '' }));
+    }
+  };
+
+  const handleSelectChange = (name: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
@@ -145,6 +159,22 @@ const CustomerForm = ({ initialData, onSubmit, onCancel }: CustomerFormProps) =>
             onChange={handleChange}
             placeholder="V123456789"
           />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="type">Customer Type</Label>
+          <Select 
+            value={formData.type} 
+            onValueChange={(value) => handleSelectChange('type', value as CustomerType)}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="new">New</SelectItem>
+              <SelectItem value="returning">Returning</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         
         <div className="space-y-2 col-span-2">

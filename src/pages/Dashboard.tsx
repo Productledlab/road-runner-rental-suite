@@ -5,13 +5,14 @@ import StatusChart from '@/components/dashboard/StatusChart';
 import RevenueChart from '@/components/dashboard/RevenueChart';
 import RecentBookingsTable from '@/components/dashboard/RecentBookingsTable';
 import AppLayout from '@/components/layout/AppLayout';
+import BranchSelector from '@/components/layout/BranchSelector';
 import { 
   CarFront, 
   CalendarDays,
   Users,
   DollarSign
 } from 'lucide-react';
-import { getVehicles, getBookings, getCustomers, getActiveBookings } from '@/lib/storage-service';
+import { getVehicles, getBookings, getCustomers, getActiveBookings, getDashboardStats } from '@/lib/storage-service';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
@@ -20,27 +21,35 @@ const Dashboard = () => {
   const [vehicles, setVehicles] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [customers, setCustomers] = useState([]);
+  const [selectedBranch, setSelectedBranch] = useState<string | null>(null);
+  const [stats, setStats] = useState({
+    totalVehicles: 0,
+    availableVehicles: 0,
+    activeBookings: 0,
+    totalRevenue: 0,
+    customers: 0
+  });
   
   useEffect(() => {
     // Load data from local storage
     setVehicles(getVehicles());
-    setBookings(getBookings());
-    setCustomers(getCustomers());
-  }, []);
+    loadBranchData(selectedBranch);
+  }, [selectedBranch]);
   
-  // Calculate metrics
-  const totalVehicles = vehicles.filter((v: any) => v.status !== 'archived').length;
-  const availableVehicles = vehicles.filter((v: any) => v.status === 'available').length;
-  const totalCustomers = customers.length;
-  const activeBookings = bookings.filter((b: any) => b.status === 'ongoing').length;
+  const loadBranchData = (branchId: string | null) => {
+    setBookings(getBookings(branchId === 'all' ? undefined : branchId || undefined));
+    setCustomers(getCustomers(branchId === 'all' ? undefined : branchId || undefined));
+    
+    const dashboardStats = getDashboardStats(branchId === 'all' ? undefined : branchId || undefined);
+    setStats(dashboardStats);
+  };
   
-  // Calculate revenue
-  const totalRevenue = bookings
-    .filter((b: any) => b.status === 'completed')
-    .reduce((sum: number, booking: any) => sum + booking.totalPrice, 0);
-
+  const handleBranchChange = (branchId: string) => {
+    setSelectedBranch(branchId);
+  };
+  
   // Active bookings details for popup
-  const activeBookingsList = getActiveBookings();
+  const activeBookingsList = getActiveBookings(selectedBranch === 'all' ? undefined : selectedBranch || undefined);
   const activeBookingsDetails = (
     <Table>
       <TableHeader>
@@ -49,6 +58,7 @@ const Dashboard = () => {
           <TableHead>Vehicle</TableHead>
           <TableHead>Start Date</TableHead>
           <TableHead>End Date</TableHead>
+          <TableHead>Branch</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -62,12 +72,13 @@ const Dashboard = () => {
               <TableCell>{vehicle ? `${vehicle.make} ${vehicle.model}` : 'Unknown'}</TableCell>
               <TableCell>{format(new Date(booking.startDate), 'MMM dd, yyyy')}</TableCell>
               <TableCell>{format(new Date(booking.endDate), 'MMM dd, yyyy')}</TableCell>
+              <TableCell>{booking.branchId}</TableCell>
             </TableRow>
           );
         })}
         {activeBookingsList.length === 0 && (
           <TableRow>
-            <TableCell colSpan={4} className="text-center">No active bookings</TableCell>
+            <TableCell colSpan={5} className="text-center">No active bookings</TableCell>
           </TableRow>
         )}
       </TableBody>
@@ -112,6 +123,8 @@ const Dashboard = () => {
           <TableHead>Name</TableHead>
           <TableHead>Email</TableHead>
           <TableHead>Phone</TableHead>
+          <TableHead>Type</TableHead>
+          <TableHead>Branch</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -120,18 +133,24 @@ const Dashboard = () => {
             <TableCell className="font-medium">{customer.name}</TableCell>
             <TableCell>{customer.email}</TableCell>
             <TableCell>{customer.phone}</TableCell>
+            <TableCell>
+              <Badge className={customer.type === 'new' ? "bg-blue-100 text-blue-800" : "bg-green-100 text-green-800"}>
+                {customer.type}
+              </Badge>
+            </TableCell>
+            <TableCell>{customer.branchId}</TableCell>
           </TableRow>
         ))}
         {customers.length > 5 && (
           <TableRow>
-            <TableCell colSpan={3} className="text-center text-sm text-gray-500">
+            <TableCell colSpan={5} className="text-center text-sm text-gray-500">
               And {customers.length - 5} more...
             </TableCell>
           </TableRow>
         )}
         {customers.length === 0 && (
           <TableRow>
-            <TableCell colSpan={3} className="text-center">No customers</TableCell>
+            <TableCell colSpan={5} className="text-center">No customers</TableCell>
           </TableRow>
         )}
       </TableBody>
@@ -148,6 +167,7 @@ const Dashboard = () => {
           <TableHead>Customer</TableHead>
           <TableHead>Vehicle</TableHead>
           <TableHead>Amount</TableHead>
+          <TableHead>Branch</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -161,19 +181,20 @@ const Dashboard = () => {
               <TableCell>{customer?.name || 'Unknown'}</TableCell>
               <TableCell>{vehicle ? `${vehicle.make} ${vehicle.model}` : 'Unknown'}</TableCell>
               <TableCell>{booking.totalPrice} OMR</TableCell>
+              <TableCell>{booking.branchId}</TableCell>
             </TableRow>
           );
         })}
         {completedBookings.length > 5 && (
           <TableRow>
-            <TableCell colSpan={4} className="text-center text-sm text-gray-500">
+            <TableCell colSpan={5} className="text-center text-sm text-gray-500">
               And {completedBookings.length - 5} more...
             </TableCell>
           </TableRow>
         )}
         {completedBookings.length === 0 && (
           <TableRow>
-            <TableCell colSpan={4} className="text-center">No completed bookings</TableCell>
+            <TableCell colSpan={5} className="text-center">No completed bookings</TableCell>
           </TableRow>
         )}
       </TableBody>
@@ -183,12 +204,15 @@ const Dashboard = () => {
   return (
     <AppLayout>
       <div className="space-y-6">
-        <h1 className="page-title">Dashboard</h1>
+        <div className="flex justify-between items-center">
+          <h1 className="page-title">Dashboard</h1>
+          <BranchSelector showAllOption={true} onChange={handleBranchChange} />
+        </div>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard 
             title="Total Active Vehicles"
-            value={totalVehicles}
+            value={stats.totalVehicles}
             icon={<CarFront className="h-5 w-5" />}
             trend={{ value: 12, isPositive: true }}
             details={availableVehiclesDetails}
@@ -196,7 +220,7 @@ const Dashboard = () => {
           
           <StatCard 
             title="Available Vehicles"
-            value={availableVehicles}
+            value={stats.availableVehicles}
             icon={<CarFront className="h-5 w-5" />}
             color="green"
             details={availableVehiclesDetails}
@@ -204,7 +228,7 @@ const Dashboard = () => {
           
           <StatCard 
             title="Active Bookings"
-            value={activeBookings}
+            value={stats.activeBookings}
             icon={<CalendarDays className="h-5 w-5" />}
             color="amber"
             details={activeBookingsDetails}
@@ -212,7 +236,7 @@ const Dashboard = () => {
           
           <StatCard 
             title="Total Revenue"
-            value={`${totalRevenue} OMR`}
+            value={`${stats.totalRevenue} OMR`}
             icon={<DollarSign className="h-5 w-5" />}
             trend={{ value: 8, isPositive: true }}
             color="purple"
@@ -222,10 +246,10 @@ const Dashboard = () => {
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <StatusChart vehicles={vehicles} />
-          <RevenueChart />
+          <RevenueChart branchId={selectedBranch === 'all' ? undefined : selectedBranch || undefined} />
         </div>
         
-        <RecentBookingsTable />
+        <RecentBookingsTable branchId={selectedBranch === 'all' ? undefined : selectedBranch || undefined} />
       </div>
     </AppLayout>
   );
