@@ -1,11 +1,30 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import AppLayout from "@/components/layout/AppLayout";
 import BookingTable from "@/components/bookings/BookingTable";
 import BranchSelector from "@/components/layout/BranchSelector";
 
 const BookingsPage = () => {
   const [selectedBranch, setSelectedBranch] = useState<string | null>(null);
+  const [userRole, setUserRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Get user information
+    const userString = localStorage.getItem('user');
+    if (userString) {
+      try {
+        const user = JSON.parse(userString);
+        setUserRole(user.role);
+        
+        // If branch manager, use their assigned branch
+        if (user.role === 'branch-manager' && user.branchAccess) {
+          setSelectedBranch(user.branchAccess);
+        }
+      } catch (e) {
+        console.error('Error parsing user data', e);
+      }
+    }
+  }, []);
 
   const handleBranchChange = (branchId: string) => {
     setSelectedBranch(branchId);
@@ -19,8 +38,7 @@ const BookingsPage = () => {
           <BranchSelector onChange={handleBranchChange} />
         </div>
         
-        {/* BookingTable component is rendered without explicit branchId prop */}
-        <BookingTable />
+        <BookingTable branchId={selectedBranch === 'all' ? undefined : selectedBranch || undefined} />
       </div>
     </AppLayout>
   );

@@ -12,7 +12,7 @@ const Index = () => {
     if (userString) {
       try {
         const user = JSON.parse(userString);
-        if (user.role === 'admin') {
+        if (user.role === 'admin' || user.role === 'branch-manager') {
           navigate('/dashboard');
         }
       } catch (e) {

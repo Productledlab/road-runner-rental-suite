@@ -25,11 +25,11 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           
-          {/* Admin Routes */}
+          {/* Routes accessible by both Admin and Branch Managers */}
           <Route 
             path="/dashboard" 
             element={
-              <AuthGuard allowedRoles={['admin']} redirectTo="/">
+              <AuthGuard allowedRoles={['admin', 'branch-manager']} redirectTo="/">
                 <Dashboard />
               </AuthGuard>
             } 
@@ -37,23 +37,15 @@ const App = () => (
           <Route 
             path="/vehicles" 
             element={
-              <AuthGuard allowedRoles={['admin']} redirectTo="/">
+              <AuthGuard allowedRoles={['admin', 'branch-manager']} redirectTo="/">
                 <VehiclesPage />
-              </AuthGuard>
-            } 
-          />
-          <Route 
-            path="/archived-vehicles" 
-            element={
-              <AuthGuard allowedRoles={['admin']} redirectTo="/">
-                <ArchivedVehiclesPage />
               </AuthGuard>
             } 
           />
           <Route 
             path="/customers" 
             element={
-              <AuthGuard allowedRoles={['admin']} redirectTo="/">
+              <AuthGuard allowedRoles={['admin', 'branch-manager']} redirectTo="/">
                 <CustomersPage />
               </AuthGuard>
             } 
@@ -61,8 +53,18 @@ const App = () => (
           <Route 
             path="/bookings" 
             element={
-              <AuthGuard allowedRoles={['admin']} redirectTo="/">
+              <AuthGuard allowedRoles={['admin', 'branch-manager']} redirectTo="/">
                 <BookingsPage />
+              </AuthGuard>
+            } 
+          />
+          
+          {/* Admin-only Routes */}
+          <Route 
+            path="/archived-vehicles" 
+            element={
+              <AuthGuard allowedRoles={['admin']} redirectTo="/">
+                <ArchivedVehiclesPage />
               </AuthGuard>
             } 
           />

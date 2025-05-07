@@ -26,6 +26,12 @@ const AuthGuard = ({ children, allowedRoles, redirectTo = '/' }: AuthGuardProps)
         const user = JSON.parse(userString);
         if (user && allowedRoles.includes(user.role)) {
           setAuthorized(true);
+          
+          // If user is a branch manager, ensure they have a current branch set
+          if (user.role === 'branch-manager' && user.branchAccess) {
+            // Set the current branch to their assigned branch if it's not already set
+            localStorage.setItem('currentBranch', user.branchAccess);
+          }
         } else {
           navigate(redirectTo);
         }

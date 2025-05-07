@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AppLayout from "@/components/layout/AppLayout";
 import VehicleTable from "@/components/vehicles/VehicleTable";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,25 @@ const VehiclesPage = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
   const [selectedBranch, setSelectedBranch] = useState<string | null>(null);
+  const [userRole, setUserRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Get user information
+    const userString = localStorage.getItem('user');
+    if (userString) {
+      try {
+        const user = JSON.parse(userString);
+        setUserRole(user.role);
+        
+        // If branch manager, use their assigned branch
+        if (user.role === 'branch-manager' && user.branchAccess) {
+          setSelectedBranch(user.branchAccess);
+        }
+      } catch (e) {
+        console.error('Error parsing user data', e);
+      }
+    }
+  }, []);
 
   const handleAddVehicle = (vehicle: Vehicle) => {
     // Save to local storage
@@ -51,7 +70,6 @@ const VehiclesPage = () => {
           </div>
         </div>
         
-        {/* Pass branchId prop only if VehicleTable accepts it */}
         <VehicleTable branchId={selectedBranch === 'all' ? undefined : selectedBranch || undefined} />
       </div>
 
