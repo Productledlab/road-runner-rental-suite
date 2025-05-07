@@ -51,6 +51,7 @@ const VehiclesPage = () => {
           </div>
         </div>
         
+        {/* Pass branchId prop only if VehicleTable accepts it */}
         <VehicleTable branchId={selectedBranch === 'all' ? undefined : selectedBranch || undefined} />
       </div>
 

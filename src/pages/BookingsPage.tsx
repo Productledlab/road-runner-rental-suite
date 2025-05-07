@@ -19,7 +19,8 @@ const BookingsPage = () => {
           <BranchSelector onChange={handleBranchChange} />
         </div>
         
-        <BookingTable branchId={selectedBranch === 'all' ? undefined : selectedBranch || undefined} />
+        {/* BookingTable component is rendered without explicit branchId prop */}
+        <BookingTable />
       </div>
     </AppLayout>
   );

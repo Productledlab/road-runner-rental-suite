@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import StatCard from '@/components/dashboard/StatCard';
 import StatusChart from '@/components/dashboard/StatusChart';
@@ -246,10 +245,10 @@ const Dashboard = () => {
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <StatusChart vehicles={vehicles} />
-          <RevenueChart branchId={selectedBranch === 'all' ? undefined : selectedBranch || undefined} />
+          <RevenueChart />
         </div>
         
-        <RecentBookingsTable branchId={selectedBranch === 'all' ? undefined : selectedBranch || undefined} />
+        <RecentBookingsTable />
       </div>
     </AppLayout>
   );

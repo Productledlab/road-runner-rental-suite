@@ -4,7 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Customer } from '@/lib/types';
+import { Customer, CustomerType } from '@/lib/types';
 import { Edit } from 'lucide-react';
 import CustomerForm from './CustomerForm';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
@@ -88,7 +88,7 @@ const CustomerTable = ({ branchId }: CustomerTableProps) => {
     const customerToSave = {
       ...newCustomer,
       branchId: getCurrentBranch(),
-      type: 'new' // New customers start as 'new'
+      type: 'new' as CustomerType // Explicitly cast to CustomerType
     };
     
     // Save to local storage

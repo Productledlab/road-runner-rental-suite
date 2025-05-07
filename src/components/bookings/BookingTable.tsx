@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -15,6 +14,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { getBookings, getCustomers, getVehicles, saveBooking } from '@/lib/storage-service';
 import { useToast } from '@/hooks/use-toast';
 
+interface BookingTableProps {
+  branchId?: string;
+}
+
 const getBadgeColorForStatus = (status: string) => {
   switch (status) {
     case 'completed':
@@ -30,7 +33,7 @@ const getBadgeColorForStatus = (status: string) => {
   }
 };
 
-const BookingTable = () => {
+const BookingTable = ({ branchId }: BookingTableProps) => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [filteredBookings, setFilteredBookings] = useState<Booking[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -43,10 +46,10 @@ const BookingTable = () => {
 
   useEffect(() => {
     // Load bookings from local storage
-    const loadedBookings = getBookings();
+    const loadedBookings = getBookings(branchId);
     setBookings(loadedBookings);
     setFilteredBookings(loadedBookings);
-  }, []);
+  }, [branchId]);
 
   const applyFilters = () => {
     let filtered = [...bookings];

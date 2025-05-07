@@ -77,7 +77,9 @@ export const mockArchivedVehicles: Vehicle[] = [
     fuelType: 'petrol',
     type: 'sedan',
     status: 'archived',
-    pricePerDay: 40
+    pricePerDay: 40,
+    currentKm: 95000,
+    images: []
   },
   {
     id: '9',
@@ -89,7 +91,9 @@ export const mockArchivedVehicles: Vehicle[] = [
     fuelType: 'petrol',
     type: 'sedan',
     status: 'archived',
-    pricePerDay: 38
+    pricePerDay: 38,
+    currentKm: 87500,
+    images: []
   }
 ];
 

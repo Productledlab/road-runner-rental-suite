@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -18,6 +17,10 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { getVehicles, saveVehicle, archiveVehicle } from '@/lib/storage-service';
 import { useToast } from '@/hooks/use-toast';
 
+interface VehicleTableProps {
+  branchId?: string;
+}
+
 const statusColors = {
   available: 'bg-green-100 text-green-800',
   booked: 'bg-blue-100 text-blue-800',
@@ -25,7 +28,7 @@ const statusColors = {
   archived: 'bg-gray-100 text-gray-800',
 };
 
-const VehicleTable = () => {
+const VehicleTable = ({ branchId }: VehicleTableProps) => {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [filteredVehicles, setFilteredVehicles] = useState<Vehicle[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -191,9 +194,9 @@ const VehicleTable = () => {
                 <TableCell className="font-medium">{vehicle.carNumber}</TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
-                    {vehicle.image ? (
+                    {vehicle.images && vehicle.images.length > 0 ? (
                       <img 
-                        src={vehicle.image} 
+                        src={vehicle.images[0]} 
                         alt={`${vehicle.make} ${vehicle.model}`} 
                         className="w-10 h-10 object-cover rounded-md"
                       />
