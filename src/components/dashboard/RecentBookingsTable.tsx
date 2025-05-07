@@ -22,22 +22,26 @@ const getBadgeColorForStatus = (status: string) => {
   }
 };
 
-const RecentBookingsTable = () => {
+interface RecentBookingsTableProps {
+  branchId?: string;
+}
+
+const RecentBookingsTable = ({ branchId }: RecentBookingsTableProps) => {
   const [recentBookings, setRecentBookings] = useState<Booking[]>([]);
   const [customers, setCustomers] = useState([]);
   const [vehicles, setVehicles] = useState([]);
   
   useEffect(() => {
-    // Get most recent 5 bookings from local storage
-    const bookings = getBookings();
+    // Get most recent 5 bookings from local storage for the selected branch
+    const bookings = getBookings(branchId);
     const sortedBookings = [...bookings]
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
       .slice(0, 5);
       
     setRecentBookings(sortedBookings);
-    setCustomers(getCustomers());
+    setCustomers(getCustomers(branchId));
     setVehicles(getVehicles());
-  }, []);
+  }, [branchId]);
 
   return (
     <Card className="col-span-2">
