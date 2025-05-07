@@ -30,22 +30,22 @@ const RevenueChart = ({ branchId }: RevenueChartProps) => {
     const monthlyRevenue = months.map(month => ({ month, revenue: 0 }));
     
     bookings.forEach((booking: any) => {
-      if (booking.status === 'completed') {
-        const completionDate = new Date(booking.updatedAt);
-        const dayOfWeek = daysOfWeek[completionDate.getDay()];
-        const month = months[completionDate.getMonth()];
-        
-        // Update weekly revenue
-        const weekDayIndex = weeklyRevenue.findIndex(item => item.day === dayOfWeek);
-        if (weekDayIndex !== -1) {
-          weeklyRevenue[weekDayIndex].revenue += booking.totalPrice;
-        }
-        
-        // Update monthly revenue
-        const monthIndex = monthlyRevenue.findIndex(item => item.month === month);
-        if (monthIndex !== -1) {
-          monthlyRevenue[monthIndex].revenue += booking.totalPrice;
-        }
+      // Count revenue for all bookings regardless of status
+      // since payments are made in advance
+      const creationDate = new Date(booking.createdAt);
+      const dayOfWeek = daysOfWeek[creationDate.getDay()];
+      const month = months[creationDate.getMonth()];
+      
+      // Update weekly revenue
+      const weekDayIndex = weeklyRevenue.findIndex(item => item.day === dayOfWeek);
+      if (weekDayIndex !== -1) {
+        weeklyRevenue[weekDayIndex].revenue += booking.totalPrice;
+      }
+      
+      // Update monthly revenue
+      const monthIndex = monthlyRevenue.findIndex(item => item.month === month);
+      if (monthIndex !== -1) {
+        monthlyRevenue[monthIndex].revenue += booking.totalPrice;
       }
     });
     

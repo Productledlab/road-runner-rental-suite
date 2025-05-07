@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -11,11 +12,12 @@ import {
   SelectValue, 
 } from '@/components/ui/select';
 import { Vehicle, VehicleStatus, VehicleType, FuelType } from '@/lib/types';
-import { Edit, Archive } from 'lucide-react';
+import { Edit, Archive, Eye } from 'lucide-react';
 import VehicleForm from './VehicleForm';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { getVehicles, saveVehicle, archiveVehicle } from '@/lib/storage-service';
 import { useToast } from '@/hooks/use-toast';
+import VehicleDetails from './VehicleDetails';
 
 interface VehicleTableProps {
   branchId?: string;
@@ -35,7 +37,9 @@ const VehicleTable = ({ branchId }: VehicleTableProps) => {
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [selectedType, setSelectedType] = useState<string>('all');
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
+  const [viewingVehicle, setViewingVehicle] = useState<Vehicle | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const { toast } = useToast();
   
   useEffect(() => {
@@ -106,6 +110,11 @@ const VehicleTable = ({ branchId }: VehicleTableProps) => {
   const handleEdit = (vehicle: Vehicle) => {
     setEditingVehicle(vehicle);
     setIsDialogOpen(true);
+  };
+  
+  const handleView = (vehicle: Vehicle) => {
+    setViewingVehicle(vehicle);
+    setIsViewDialogOpen(true);
   };
 
   const handleVehicleUpdate = (updatedVehicle: Vehicle) => {
@@ -183,6 +192,7 @@ const VehicleTable = ({ branchId }: VehicleTableProps) => {
               <TableHead>Color</TableHead>
               <TableHead>Type</TableHead>
               <TableHead>Fuel Type</TableHead>
+              <TableHead>Current KM</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Price/Day</TableHead>
               <TableHead>Actions</TableHead>
@@ -212,6 +222,7 @@ const VehicleTable = ({ branchId }: VehicleTableProps) => {
                 <TableCell>
                   {vehicle.fuelType.charAt(0).toUpperCase() + vehicle.fuelType.slice(1)}
                 </TableCell>
+                <TableCell>{vehicle.currentKm || 0}</TableCell>
                 <TableCell>
                   <Badge className={(statusColors as any)[vehicle.status]}>
                     {vehicle.status.charAt(0).toUpperCase() + vehicle.status.slice(1)}
@@ -220,6 +231,13 @@ const VehicleTable = ({ branchId }: VehicleTableProps) => {
                 <TableCell>{vehicle.pricePerDay} OMR/day</TableCell>
                 <TableCell>
                   <div className="flex gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleView(vehicle)}
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
                     <Button 
                       variant="outline" 
                       size="sm"
@@ -240,7 +258,7 @@ const VehicleTable = ({ branchId }: VehicleTableProps) => {
             ))}
             {filteredVehicles.length === 0 && (
               <TableRow>
-                <TableCell colSpan={9} className="h-24 text-center">
+                <TableCell colSpan={10} className="h-24 text-center">
                   No vehicles found.
                 </TableCell>
               </TableRow>
@@ -256,6 +274,15 @@ const VehicleTable = ({ branchId }: VehicleTableProps) => {
             onSubmit={handleVehicleUpdate}
             onCancel={() => setIsDialogOpen(false)}
           />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+        <DialogContent className="sm:max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>Vehicle Details</DialogTitle>
+          </DialogHeader>
+          {viewingVehicle && <VehicleDetails vehicle={viewingVehicle} />}
         </DialogContent>
       </Dialog>
     </div>

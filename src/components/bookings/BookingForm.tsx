@@ -45,6 +45,7 @@ const BookingForm = ({ initialData, onSubmit, onCancel }: BookingFormProps) => {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [availableVehicles, setAvailableVehicles] = useState<any[]>([]);
   const [isCompletingBooking, setIsCompletingBooking] = useState(false);
+  const [kmDriven, setKmDriven] = useState<number | undefined>(undefined);
   
   useEffect(() => {
     if (initialData) {
@@ -89,10 +90,8 @@ const BookingForm = ({ initialData, onSubmit, onCancel }: BookingFormProps) => {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
 
-    // If vehicle changes, recalculate price and set startKm
+    // If vehicle changes, set startKm
     if (name === 'vehicleId') {
-      calculateTotalPrice(value as string, startDate, endDate);
-      
       // Find the vehicle and set startKm
       const vehicle = availableVehicles.find(v => v.id === value);
       if (vehicle) {
@@ -100,6 +99,17 @@ const BookingForm = ({ initialData, onSubmit, onCancel }: BookingFormProps) => {
           ...prev,
           startKm: vehicle.currentKm || 0
         }));
+      }
+    }
+
+    // Calculate km driven when endKm changes
+    if (name === 'endKm') {
+      const startKm = formData.startKm || 0;
+      const endKm = Number(value);
+      if (endKm >= startKm) {
+        setKmDriven(endKm - startKm);
+      } else {
+        setKmDriven(undefined);
       }
     }
   };
@@ -112,7 +122,6 @@ const BookingForm = ({ initialData, onSubmit, onCancel }: BookingFormProps) => {
         ...prev,
         startDate: formattedDate
       }));
-      calculateTotalPrice(formData.vehicleId, date, endDate);
       
       if (!initialData && endDate) {
         // Load available vehicles for the selected date range
@@ -130,7 +139,6 @@ const BookingForm = ({ initialData, onSubmit, onCancel }: BookingFormProps) => {
         ...prev,
         endDate: formattedDate
       }));
-      calculateTotalPrice(formData.vehicleId, startDate, date);
       
       if (!initialData && startDate) {
         // Load available vehicles for the selected date range
@@ -138,21 +146,6 @@ const BookingForm = ({ initialData, onSubmit, onCancel }: BookingFormProps) => {
         setAvailableVehicles(vehicles);
       }
     }
-  };
-
-  const calculateTotalPrice = (vehicleId: string, start?: Date, end?: Date) => {
-    if (!vehicleId || !start || !end) return;
-
-    const vehicle = availableVehicles.find(v => v.id === vehicleId);
-    if (!vehicle) return;
-
-    const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-    const price = days * vehicle.pricePerDay;
-
-    setFormData(prev => ({
-      ...prev,
-      totalPrice: price > 0 ? price : 0
-    }));
   };
 
   const handleAddNewCustomer = (customer: Customer) => {
@@ -242,35 +235,34 @@ const BookingForm = ({ initialData, onSubmit, onCancel }: BookingFormProps) => {
       </DialogHeader>
       
       <div className="grid grid-cols-2 gap-4">
+        {/* Customer Selection */}
         <div className="space-y-2">
           <Label htmlFor="customerId">Customer *</Label>
-          <div className="grid grid-cols-5 gap-2">
-            <div className="col-span-4">
-              <Select 
-                value={formData.customerId} 
-                onValueChange={(value) => handleChange('customerId', value)}
-                disabled={isCompletingBooking}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a customer" />
-                </SelectTrigger>
-                <SelectContent>
-                  {customers.map(customer => (
-                    <SelectItem key={customer.id} value={customer.id}>
-                      {customer.name} {customer.type === 'new' ? '(New)' : '(Returning)'}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="flex flex-col gap-2">
+            <Select 
+              value={formData.customerId} 
+              onValueChange={(value) => handleChange('customerId', value)}
+              disabled={isCompletingBooking}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select a customer" />
+              </SelectTrigger>
+              <SelectContent>
+                {customers.map(customer => (
+                  <SelectItem key={customer.id} value={customer.id}>
+                    {customer.name} {customer.type === 'new' ? '(New)' : '(Returning)'}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            
             <Button 
               type="button" 
               variant="outline" 
               onClick={() => document.getElementById('newCustomerAccordion')?.click()}
-              className="col-span-1"
               disabled={isCompletingBooking}
             >
-              Add
+              Add New Customer
             </Button>
           </div>
           {errors.customerId && <p className="text-sm text-red-500">{errors.customerId}</p>}
@@ -289,32 +281,7 @@ const BookingForm = ({ initialData, onSubmit, onCancel }: BookingFormProps) => {
           </Accordion>
         </div>
         
-        <div className="space-y-2">
-          <Label htmlFor="vehicleId">Vehicle *</Label>
-          <Select 
-            value={formData.vehicleId} 
-            onValueChange={(value) => handleChange('vehicleId', value)}
-            disabled={isCompletingBooking || !startDate || !endDate}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder={(!startDate || !endDate) ? 'Select dates first' : 'Select a vehicle'} />
-            </SelectTrigger>
-            <SelectContent>
-              {availableVehicles.map(vehicle => (
-                <SelectItem key={vehicle.id} value={vehicle.id}>
-                  {vehicle.make} {vehicle.model} ({vehicle.carNumber}) - {vehicle.pricePerDay} OMR/day
-                </SelectItem>
-              ))}
-              {availableVehicles.length === 0 && startDate && endDate && (
-                <SelectItem value="no-vehicles" disabled>
-                  No vehicles available for selected dates
-                </SelectItem>
-              )}
-            </SelectContent>
-          </Select>
-          {errors.vehicleId && <p className="text-sm text-red-500">{errors.vehicleId}</p>}
-        </div>
-        
+        {/* Start Date */}
         <div className="space-y-2">
           <Label htmlFor="startDate">Start Date *</Label>
           <Popover>
@@ -340,6 +307,7 @@ const BookingForm = ({ initialData, onSubmit, onCancel }: BookingFormProps) => {
           {errors.startDate && <p className="text-sm text-red-500">{errors.startDate}</p>}
         </div>
         
+        {/* End Date */}
         <div className="space-y-2">
           <Label htmlFor="endDate">End Date *</Label>
           <Popover>
@@ -366,6 +334,34 @@ const BookingForm = ({ initialData, onSubmit, onCancel }: BookingFormProps) => {
           {errors.endDate && <p className="text-sm text-red-500">{errors.endDate}</p>}
         </div>
         
+        {/* Vehicle Selection */}
+        <div className="space-y-2">
+          <Label htmlFor="vehicleId">Vehicle *</Label>
+          <Select 
+            value={formData.vehicleId} 
+            onValueChange={(value) => handleChange('vehicleId', value)}
+            disabled={isCompletingBooking || !startDate || !endDate}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder={(!startDate || !endDate) ? 'Select dates first' : 'Select a vehicle'} />
+            </SelectTrigger>
+            <SelectContent>
+              {availableVehicles.map(vehicle => (
+                <SelectItem key={vehicle.id} value={vehicle.id}>
+                  {vehicle.make} {vehicle.model} ({vehicle.carNumber}) - {vehicle.pricePerDay} OMR/day
+                </SelectItem>
+              ))}
+              {availableVehicles.length === 0 && startDate && endDate && (
+                <SelectItem value="no-vehicles" disabled>
+                  No vehicles available for selected dates
+                </SelectItem>
+              )}
+            </SelectContent>
+          </Select>
+          {errors.vehicleId && <p className="text-sm text-red-500">{errors.vehicleId}</p>}
+        </div>
+        
+        {/* Start KM */}
         <div className="space-y-2">
           <Label htmlFor="startKm">Start KM Reading *</Label>
           <Input
@@ -380,6 +376,7 @@ const BookingForm = ({ initialData, onSubmit, onCancel }: BookingFormProps) => {
           {errors.startKm && <p className="text-sm text-red-500">{errors.startKm}</p>}
         </div>
         
+        {/* End KM (Only shown when completing a booking) */}
         {isCompletingBooking && (
           <div className="space-y-2">
             <Label htmlFor="endKm">Return KM Reading *</Label>
@@ -395,6 +392,20 @@ const BookingForm = ({ initialData, onSubmit, onCancel }: BookingFormProps) => {
           </div>
         )}
         
+        {/* KM Driven (calculated) */}
+        {kmDriven !== undefined && (
+          <div className="space-y-2">
+            <Label>Kilometers Driven</Label>
+            <Input
+              type="text"
+              value={kmDriven}
+              readOnly
+              className="bg-gray-50"
+            />
+          </div>
+        )}
+        
+        {/* Status */}
         <div className="space-y-2">
           <Label htmlFor="status">Status *</Label>
           <Select 
@@ -415,6 +426,7 @@ const BookingForm = ({ initialData, onSubmit, onCancel }: BookingFormProps) => {
           {errors.status && <p className="text-sm text-red-500">{errors.status}</p>}
         </div>
         
+        {/* Price */}
         <div className="space-y-2">
           <Label htmlFor="totalPrice">Total Price (OMR) *</Label>
           <Input
@@ -424,7 +436,6 @@ const BookingForm = ({ initialData, onSubmit, onCancel }: BookingFormProps) => {
             value={formData.totalPrice}
             onChange={(e) => handleChange('totalPrice', parseFloat(e.target.value))}
             placeholder="0"
-            disabled={isCompletingBooking}
           />
           {errors.totalPrice && <p className="text-sm text-red-500">{errors.totalPrice}</p>}
         </div>
