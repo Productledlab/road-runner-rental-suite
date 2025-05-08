@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -13,6 +14,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { getBookings, getCustomers, getVehicles, saveBooking } from '@/lib/storage-service';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface BookingTableProps {
   branchId?: string;
@@ -43,6 +45,7 @@ const BookingTable = ({ branchId }: BookingTableProps) => {
   const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   useEffect(() => {
     // Load bookings from local storage
@@ -132,8 +135,8 @@ const BookingTable = ({ branchId }: BookingTableProps) => {
     setIsDialogOpen(false);
     
     toast({
-      title: "Booking updated",
-      description: "Booking has been updated successfully."
+      title: t('bookingUpdated'),
+      description: t('bookingUpdatedDesc')
     });
   };
 
@@ -153,8 +156,8 @@ const BookingTable = ({ branchId }: BookingTableProps) => {
     setIsDialogOpen(false);
     
     toast({
-      title: "Booking created",
-      description: "New booking has been created successfully."
+      title: t('bookingCreated'),
+      description: t('bookingCreatedDesc')
     });
   };
 
@@ -168,7 +171,7 @@ const BookingTable = ({ branchId }: BookingTableProps) => {
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="w-full sm:w-64">
             <Input
-              placeholder="Search by customer name..."
+              placeholder={t('searchCustomerName')}
               value={searchTerm}
               onChange={handleSearch}
               className="w-full"
@@ -179,7 +182,7 @@ const BookingTable = ({ branchId }: BookingTableProps) => {
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" className="w-full justify-start text-left">
-                  {startDate ? format(startDate, 'PP') : 'Start Date'}
+                  {startDate ? format(startDate, 'PP') : t('startDate')}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0">
@@ -198,7 +201,7 @@ const BookingTable = ({ branchId }: BookingTableProps) => {
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" className="w-full justify-start text-left">
-                  {endDate ? format(endDate, 'PP') : 'End Date'}
+                  {endDate ? format(endDate, 'PP') : t('endDate')}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0">
@@ -216,13 +219,13 @@ const BookingTable = ({ branchId }: BookingTableProps) => {
           <div className="w-full sm:w-48">
             <Select value={selectedStatus} onValueChange={handleStatusFilter}>
               <SelectTrigger>
-                <SelectValue placeholder="Status" />
+                <SelectValue placeholder={t('status')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="all">{t('allStatuses')}</SelectItem>
                 {statusOptions.map(status => (
                   <SelectItem key={status} value={status}>
-                    {status.charAt(0).toUpperCase() + status.slice(1)}
+                    {t(status)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -231,7 +234,7 @@ const BookingTable = ({ branchId }: BookingTableProps) => {
           
           <div>
             <Button variant="outline" onClick={clearFilters}>
-              Clear Filters
+              {t('clearFilters')}
             </Button>
           </div>
         </div>
@@ -240,7 +243,7 @@ const BookingTable = ({ branchId }: BookingTableProps) => {
           onClick={handleAddNewBooking}
           className="bg-rental-600 hover:bg-rental-700 text-white whitespace-nowrap"
         >
-          New Booking
+          {t('newBooking')}
         </Button>
       </div>
 
@@ -248,14 +251,14 @@ const BookingTable = ({ branchId }: BookingTableProps) => {
         <Table>
           <TableHeader>
             <TableRow className="table-header">
-              <TableHead>Booking ID</TableHead>
-              <TableHead>Customer</TableHead>
-              <TableHead>Vehicle</TableHead>
-              <TableHead>Start Date</TableHead>
-              <TableHead>End Date</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Total Price</TableHead>
-              <TableHead>Actions</TableHead>
+              <TableHead>{t('bookingId')}</TableHead>
+              <TableHead>{t('customer')}</TableHead>
+              <TableHead>{t('vehicle')}</TableHead>
+              <TableHead>{t('startDate')}</TableHead>
+              <TableHead>{t('endDate')}</TableHead>
+              <TableHead>{t('status')}</TableHead>
+              <TableHead>{t('totalPrice')}</TableHead>
+              <TableHead>{t('actions')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -272,10 +275,10 @@ const BookingTable = ({ branchId }: BookingTableProps) => {
                   <TableCell>{format(new Date(booking.endDate), 'MMM dd, yyyy')}</TableCell>
                   <TableCell>
                     <Badge className={getBadgeColorForStatus(booking.status)}>
-                      {booking.status}
+                      {t(booking.status)}
                     </Badge>
                   </TableCell>
-                  <TableCell>{booking.totalPrice} OMR</TableCell>
+                  <TableCell>{booking.totalPrice} {t('currency')}</TableCell>
                   <TableCell>
                     <Button 
                       variant="outline" 
@@ -291,7 +294,7 @@ const BookingTable = ({ branchId }: BookingTableProps) => {
             {filteredBookings.length === 0 && (
               <TableRow>
                 <TableCell colSpan={8} className="h-24 text-center">
-                  No bookings found matching the criteria.
+                  {t('noBookingsFound')}
                 </TableCell>
               </TableRow>
             )}
@@ -300,7 +303,7 @@ const BookingTable = ({ branchId }: BookingTableProps) => {
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <BookingForm 
             initialData={editingBooking}
             onSubmit={editingBooking ? handleBookingUpdate : handleBookingCreate}

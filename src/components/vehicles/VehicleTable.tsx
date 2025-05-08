@@ -18,6 +18,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { getVehicles, saveVehicle, archiveVehicle } from '@/lib/storage-service';
 import { useToast } from '@/hooks/use-toast';
 import VehicleDetails from './VehicleDetails';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface VehicleTableProps {
   branchId?: string;
@@ -41,6 +42,7 @@ const VehicleTable = ({ branchId }: VehicleTableProps) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const { toast } = useToast();
+  const { t } = useLanguage();
   
   useEffect(() => {
     // Load vehicles from local storage
@@ -102,8 +104,8 @@ const VehicleTable = ({ branchId }: VehicleTableProps) => {
     applyFilters(searchTerm, selectedStatus, selectedType);
     
     toast({
-      title: "Vehicle archived",
-      description: "The vehicle has been moved to the archive."
+      title: t('vehicleArchived'),
+      description: t('vehicleArchivedDesc')
     });
   };
 
@@ -131,8 +133,8 @@ const VehicleTable = ({ branchId }: VehicleTableProps) => {
     setIsDialogOpen(false);
     
     toast({
-      title: "Vehicle updated",
-      description: "Vehicle information has been updated successfully."
+      title: t('vehicleUpdated'),
+      description: t('vehicleUpdatedDesc')
     });
   };
 
@@ -144,7 +146,7 @@ const VehicleTable = ({ branchId }: VehicleTableProps) => {
       <div className="flex flex-col md:flex-row gap-4 mb-6">
         <div className="flex-1">
           <Input
-            placeholder="Search vehicles..."
+            placeholder={t('searchVehicles')}
             value={searchTerm}
             onChange={handleSearch}
             className="w-full"
@@ -153,13 +155,13 @@ const VehicleTable = ({ branchId }: VehicleTableProps) => {
         <div className="w-full md:w-48">
           <Select value={selectedStatus} onValueChange={handleStatusFilter}>
             <SelectTrigger>
-              <SelectValue placeholder="Status" />
+              <SelectValue placeholder={t('status')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
+              <SelectItem value="all">{t('allStatuses')}</SelectItem>
               {statusOptions.map(status => (
                 <SelectItem key={status} value={status}>
-                  {status.charAt(0).toUpperCase() + status.slice(1)}
+                  {t(status)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -168,13 +170,13 @@ const VehicleTable = ({ branchId }: VehicleTableProps) => {
         <div className="w-full md:w-48">
           <Select value={selectedType} onValueChange={handleTypeFilter}>
             <SelectTrigger>
-              <SelectValue placeholder="Type" />
+              <SelectValue placeholder={t('type')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Types</SelectItem>
+              <SelectItem value="all">{t('allTypes')}</SelectItem>
               {typeOptions.map(type => (
                 <SelectItem key={type} value={type}>
-                  {type.charAt(0).toUpperCase() + type.slice(1)}
+                  {t(type)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -186,16 +188,16 @@ const VehicleTable = ({ branchId }: VehicleTableProps) => {
         <Table>
           <TableHeader>
             <TableRow className="table-header">
-              <TableHead>Car Number</TableHead>
-              <TableHead>Vehicle</TableHead>
-              <TableHead>Year</TableHead>
-              <TableHead>Color</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Fuel Type</TableHead>
-              <TableHead>Current KM</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Price/Day</TableHead>
-              <TableHead>Actions</TableHead>
+              <TableHead>{t('carNumber')}</TableHead>
+              <TableHead>{t('vehicle')}</TableHead>
+              <TableHead>{t('year')}</TableHead>
+              <TableHead>{t('color')}</TableHead>
+              <TableHead>{t('type')}</TableHead>
+              <TableHead>{t('fuelType')}</TableHead>
+              <TableHead>{t('currentKm')}</TableHead>
+              <TableHead>{t('status')}</TableHead>
+              <TableHead>{t('pricePerDay')}</TableHead>
+              <TableHead>{t('actions')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -217,18 +219,18 @@ const VehicleTable = ({ branchId }: VehicleTableProps) => {
                 <TableCell>{vehicle.year}</TableCell>
                 <TableCell>{vehicle.color}</TableCell>
                 <TableCell>
-                  {vehicle.type.charAt(0).toUpperCase() + vehicle.type.slice(1)}
+                  {t(vehicle.type)}
                 </TableCell>
                 <TableCell>
-                  {vehicle.fuelType.charAt(0).toUpperCase() + vehicle.fuelType.slice(1)}
+                  {t(vehicle.fuelType)}
                 </TableCell>
                 <TableCell>{vehicle.currentKm || 0}</TableCell>
                 <TableCell>
                   <Badge className={(statusColors as any)[vehicle.status]}>
-                    {vehicle.status.charAt(0).toUpperCase() + vehicle.status.slice(1)}
+                    {t(vehicle.status)}
                   </Badge>
                 </TableCell>
-                <TableCell>{vehicle.pricePerDay} OMR/day</TableCell>
+                <TableCell>{vehicle.pricePerDay} {t('currency')}{t('perDay')}</TableCell>
                 <TableCell>
                   <div className="flex gap-2">
                     <Button 
@@ -259,7 +261,7 @@ const VehicleTable = ({ branchId }: VehicleTableProps) => {
             {filteredVehicles.length === 0 && (
               <TableRow>
                 <TableCell colSpan={10} className="h-24 text-center">
-                  No vehicles found.
+                  {t('noVehiclesFound')}
                 </TableCell>
               </TableRow>
             )}
@@ -268,7 +270,7 @@ const VehicleTable = ({ branchId }: VehicleTableProps) => {
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <VehicleForm 
             initialData={editingVehicle}
             onSubmit={handleVehicleUpdate}
@@ -278,9 +280,9 @@ const VehicleTable = ({ branchId }: VehicleTableProps) => {
       </Dialog>
 
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="sm:max-w-4xl">
+        <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Vehicle Details</DialogTitle>
+            <DialogTitle>{t('vehicleDetails')}</DialogTitle>
           </DialogHeader>
           {viewingVehicle && <VehicleDetails vehicle={viewingVehicle} />}
         </DialogContent>

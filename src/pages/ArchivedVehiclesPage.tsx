@@ -11,7 +11,7 @@ const ArchivedVehiclesPage = () => {
       <div className="space-y-6">
         <h1 className="page-title">{t('archivedVehicles')}</h1>
         <p className="text-gray-500">
-          This page shows vehicles that have been archived and are no longer active in the fleet.
+          {t('archivedVehiclesDesc')}
         </p>
         
         <ArchivedVehiclesTable />

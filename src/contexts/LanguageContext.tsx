@@ -74,6 +74,105 @@ const translations: Translations = {
   // 404 Page
   notFound: { en: "Oops! Page not found", ar: "عفوا! الصفحة غير موجودة" },
   notFoundDesc: { en: "The page you are looking for might have been removed or is temporarily unavailable.", ar: "الصفحة التي تبحث عنها ربما تمت إزالتها أو غير متاحة مؤقتًا." },
+  
+  // Table headers and column names
+  bookingId: { en: "Booking ID", ar: "رقم الحجز" },
+  customer: { en: "Customer", ar: "العميل" },
+  vehicle: { en: "Vehicle", ar: "المركبة" },
+  startDate: { en: "Start Date", ar: "تاريخ البدء" },
+  endDate: { en: "End Date", ar: "تاريخ الانتهاء" },
+  status: { en: "Status", ar: "الحالة" },
+  totalPrice: { en: "Total Price", ar: "السعر الإجمالي" },
+  actions: { en: "Actions", ar: "إجراءات" },
+  carNumber: { en: "Car Number", ar: "رقم السيارة" },
+  year: { en: "Year", ar: "السنة" },
+  color: { en: "Color", ar: "اللون" },
+  type: { en: "Type", ar: "النوع" },
+  fuelType: { en: "Fuel Type", ar: "نوع الوقود" },
+  currentKm: { en: "Current KM", ar: "الكيلومترات الحالية" },
+  pricePerDay: { en: "Price/Day", ar: "السعر/يوم" },
+  name: { en: "Name", ar: "الاسم" },
+  phone: { en: "Phone", ar: "الهاتف" },
+  dateAdded: { en: "Date Added", ar: "تاريخ الإضافة" },
+  
+  // Form fields and labels
+  fullName: { en: "Full Name", ar: "الاسم الكامل" },
+  emailAddress: { en: "Email Address", ar: "البريد الإلكتروني" },
+  phoneNumber: { en: "Phone Number", ar: "رقم الهاتف" },
+  passportNumber: { en: "Passport Number", ar: "رقم جواز السفر" },
+  visaNumber: { en: "Visa Number", ar: "رقم التأشيرة" },
+  customerType: { en: "Customer Type", ar: "نوع العميل" },
+  address: { en: "Address", ar: "العنوان" },
+  
+  // Booking form
+  selectCustomer: { en: "Select a customer", ar: "اختر عميلاً" },
+  selectStartDate: { en: "Select start date", ar: "اختر تاريخ البدء" },
+  selectEndDate: { en: "Select end date", ar: "اختر تاريخ الانتهاء" },
+  selectDatesFirst: { en: "Select dates first", ar: "اختر التواريخ أولا" },
+  selectVehicle: { en: "Select a vehicle", ar: "اختر مركبة" },
+  noVehiclesAvailable: { en: "No vehicles available for selected dates", ar: "لا توجد مركبات متاحة للتواريخ المحددة" },
+  startKm: { en: "Start KM Reading", ar: "قراءة العداد عند البدء" },
+  returnKm: { en: "Return KM Reading", ar: "قراءة العداد عند العودة" },
+  kmDriven: { en: "Kilometers Driven", ar: "الكيلومترات المقطوعة" },
+  
+  // Status options
+  pending: { en: "Pending", ar: "قيد الانتظار" },
+  ongoing: { en: "Ongoing", ar: "جاري" },
+  completed: { en: "Completed", ar: "مكتمل" },
+  cancelled: { en: "Cancelled", ar: "ملغي" },
+  available: { en: "Available", ar: "متاح" },
+  booked: { en: "Booked", ar: "محجوز" },
+  maintenance: { en: "Maintenance", ar: "صيانة" },
+  archived: { en: "Archived", ar: "مؤرشف" },
+  
+  // Vehicle types
+  sedan: { en: "Sedan", ar: "سيدان" },
+  suv: { en: "SUV", ar: "دفع رباعي" },
+  hatchback: { en: "Hatchback", ar: "هاتشباك" },
+  luxury: { en: "Luxury", ar: "فاخرة" },
+  van: { en: "Van", ar: "شاحنة صغيرة" },
+  
+  // Fuel types
+  petrol: { en: "Petrol", ar: "بنزين" },
+  diesel: { en: "Diesel", ar: "ديزل" },
+  electric: { en: "Electric", ar: "كهربائي" },
+  hybrid: { en: "Hybrid", ar: "هجين" },
+  
+  // Customer types
+  new: { en: "New", ar: "جديد" },
+  returning: { en: "Returning", ar: "عائد" },
+  
+  // Messages
+  searchVehicles: { en: "Search vehicles...", ar: "البحث عن مركبات..." },
+  searchCustomerName: { en: "Search by customer name...", ar: "البحث باسم العميل..." },
+  allStatuses: { en: "All Statuses", ar: "كل الحالات" },
+  allTypes: { en: "All Types", ar: "كل الأنواع" },
+  clearFilters: { en: "Clear Filters", ar: "مسح عوامل التصفية" },
+  noVehiclesFound: { en: "No vehicles found.", ar: "لم يتم العثور على مركبات." },
+  vehicleArchived: { en: "Vehicle archived", ar: "تم أرشفة المركبة" },
+  vehicleArchivedDesc: { en: "The vehicle has been moved to the archive.", ar: "تم نقل المركبة إلى الأرشيف." },
+  vehicleUpdated: { en: "Vehicle updated", ar: "تم تحديث المركبة" },
+  vehicleUpdatedDesc: { en: "Vehicle information has been updated successfully.", ar: "تم تحديث معلومات المركبة بنجاح." },
+  vehicleDetails: { en: "Vehicle Details", ar: "تفاصيل المركبة" },
+  noBookingsFound: { en: "No bookings found matching the criteria.", ar: "لم يتم العثور على حجوزات تطابق المعايير." },
+  bookingUpdated: { en: "Booking updated", ar: "تم تحديث الحجز" },
+  bookingUpdatedDesc: { en: "Booking has been updated successfully.", ar: "تم تحديث الحجز بنجاح." },
+  bookingCreated: { en: "Booking created", ar: "تم إنشاء الحجز" },
+  bookingCreatedDesc: { en: "New booking has been created successfully.", ar: "تم إنشاء حجز جديد بنجاح." },
+  newBooking: { en: "New Booking", ar: "حجز جديد" },
+  createNewBooking: { en: "Create New Booking", ar: "إنشاء حجز جديد" },
+  editBooking: { en: "Edit Booking", ar: "تحرير الحجز" },
+  completeBooking: { en: "Complete Booking", ar: "إكمال الحجز" },
+  updateBookingDetails: { en: "Update booking details", ar: "تحديث تفاصيل الحجز" },
+  enterBookingDetails: { en: "Enter details for the new booking", ar: "أدخل تفاصيل الحجز الجديد" },
+  enterReturnKm: { en: "Enter the return km reading to complete the booking", ar: "أدخل قراءة العداد عند العودة لإكمال الحجز" },
+  createBooking: { en: "Create Booking", ar: "إنشاء حجز" },
+  updateCustomer: { en: "Update Customer", ar: "تحديث العميل" },
+  addCustomer: { en: "Add Customer", ar: "إضافة عميل" },
+  
+  // Currency
+  currency: { en: "$", ar: "ر.ع." },
+  perDay: { en: "/day", ar: "/يوم" },
 };
 
 type LanguageContextType = {

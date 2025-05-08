@@ -9,9 +9,182 @@ import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
-import { getCurrentBranch, getCustomers, getAvailableVehicles, saveCustomer } from '@/lib/storage-service';
+import { getCurrentBranch, getCustomers, getVehicles, getAvailableVehicles, saveCustomer, saveVehicle } from '@/lib/storage-service';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import CustomerForm from '@/components/customers/CustomerForm';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+
+// Create a simplified version of CustomerForm that doesn't use <form> elements
+// to avoid nested forms
+const CustomerFormSimple = ({ onSubmit }: { onSubmit: (customer: Customer) => void }) => {
+  const { t } = useLanguage();
+  const [formData, setFormData] = useState<Customer>({
+    id: Math.random().toString(36).substr(2, 9),
+    name: '',
+    passport: '',
+    visa: '',
+    phone: '',
+    email: '',
+    address: '',
+    dateAdded: new Date().toISOString().split('T')[0],
+    branchId: getCurrentBranch() || '',
+    type: 'new'
+  });
+  
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: '' }));
+    }
+  };
+
+  const handleSelectChange = (name: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: '' }));
+    }
+  };
+
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+    
+    if (!formData.name.trim()) newErrors.name = t('fullName') + ' ' + t('required');
+    if (!formData.passport.trim()) newErrors.passport = t('passportNumber') + ' ' + t('required');
+    if (!formData.phone.trim()) newErrors.phone = t('phoneNumber') + ' ' + t('required');
+    if (!formData.email.trim()) newErrors.email = t('emailAddress') + ' ' + t('required');
+    else {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email)) {
+        newErrors.email = t('enterValidEmail');
+      }
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = (e: React.MouseEvent) => {
+    e.preventDefault();
+    
+    if (validateForm()) {
+      onSubmit(formData);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="name">{t('fullName')} *</Label>
+          <Input
+            id="name"
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+            placeholder="John Doe"
+          />
+          {errors.name && <p className="text-sm text-red-500">{errors.name}</p>}
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="email">{t('emailAddress')} *</Label>
+          <Input
+            id="email"
+            name="email"
+            type="email"
+            value={formData.email}
+            onChange={handleChange}
+            placeholder="john.doe@example.com"
+          />
+          {errors.email && <p className="text-sm text-red-500">{errors.email}</p>}
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="phone">{t('phoneNumber')} *</Label>
+          <Input
+            id="phone"
+            name="phone"
+            value={formData.phone}
+            onChange={handleChange}
+            placeholder="+1 234-567-8901"
+          />
+          {errors.phone && <p className="text-sm text-red-500">{errors.phone}</p>}
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="passport">{t('passportNumber')} *</Label>
+          <Input
+            id="passport"
+            name="passport"
+            value={formData.passport}
+            onChange={handleChange}
+            placeholder="AB1234567"
+          />
+          {errors.passport && <p className="text-sm text-red-500">{errors.passport}</p>}
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="visa">{t('visaNumber')}</Label>
+          <Input
+            id="visa"
+            name="visa"
+            value={formData.visa || ''}
+            onChange={handleChange}
+            placeholder="V123456789"
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="type">{t('customerType')}</Label>
+          <Select 
+            value={formData.type} 
+            onValueChange={(value) => handleSelectChange('type', value)}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="new">{t('new')}</SelectItem>
+              <SelectItem value="returning">{t('returning')}</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="space-y-2 col-span-2">
+          <Label htmlFor="address">{t('address')}</Label>
+          <Input
+            id="address"
+            name="address"
+            value={formData.address || ''}
+            onChange={handleChange}
+            placeholder="123 Main St, City, Country"
+          />
+        </div>
+      </div>
+
+      <div className="flex justify-end mt-4">
+        <Button 
+          type="button" 
+          className="bg-rental-600 hover:bg-rental-700 text-white"
+          onClick={handleSubmit}
+        >
+          {t('addCustomer')}
+        </Button>
+      </div>
+    </div>
+  );
+};
 
 interface BookingFormProps {
   initialData: Booking | null;
@@ -46,6 +219,8 @@ const BookingForm = ({ initialData, onSubmit, onCancel }: BookingFormProps) => {
   const [availableVehicles, setAvailableVehicles] = useState<any[]>([]);
   const [isCompletingBooking, setIsCompletingBooking] = useState(false);
   const [kmDriven, setKmDriven] = useState<number | undefined>(undefined);
+  const [isCustomerSheetOpen, setIsCustomerSheetOpen] = useState(false);
+  const { t } = useLanguage();
   
   useEffect(() => {
     if (initialData) {
@@ -167,6 +342,9 @@ const BookingForm = ({ initialData, onSubmit, onCancel }: BookingFormProps) => {
       ...prev,
       customerId: savedCustomer.id
     }));
+
+    // Close the sheet
+    setIsCustomerSheetOpen(false);
   };
 
   const validateForm = (): boolean => {
@@ -212,6 +390,19 @@ const BookingForm = ({ initialData, onSubmit, onCancel }: BookingFormProps) => {
           status: 'completed'
         };
       }
+
+      // If creating a new booking, update the vehicle status to booked
+      if (!initialData && updatedBooking.vehicleId) {
+        const vehicles = getVehicles();
+        const vehicle = vehicles.find(v => v.id === updatedBooking.vehicleId);
+        if (vehicle) {
+          const updatedVehicle = {
+            ...vehicle,
+            status: 'booked' as const
+          };
+          saveVehicle(updatedVehicle);
+        }
+      }
       
       onSubmit(updatedBooking);
     }
@@ -225,19 +416,19 @@ const BookingForm = ({ initialData, onSubmit, onCancel }: BookingFormProps) => {
     <form onSubmit={handleSubmit} className="space-y-4">
       <DialogHeader>
         <DialogTitle>
-          {initialData ? (isCompletingBooking ? 'Complete Booking' : 'Edit Booking') : 'Create New Booking'}
+          {initialData ? (isCompletingBooking ? t('completeBooking') : t('editBooking')) : t('createNewBooking')}
         </DialogTitle>
         <DialogDescription>
           {isCompletingBooking
-            ? 'Enter the return km reading to complete the booking'
-            : (initialData ? 'Update booking details' : 'Enter details for the new booking')}
+            ? t('enterReturnKm')
+            : (initialData ? t('updateBookingDetails') : t('enterBookingDetails'))}
         </DialogDescription>
       </DialogHeader>
       
       <div className="grid grid-cols-2 gap-4">
         {/* Customer Selection */}
         <div className="space-y-2">
-          <Label htmlFor="customerId">Customer *</Label>
+          <Label htmlFor="customerId">{t('customer')} *</Label>
           <div className="flex flex-col gap-2">
             <Select 
               value={formData.customerId} 
@@ -245,53 +436,50 @@ const BookingForm = ({ initialData, onSubmit, onCancel }: BookingFormProps) => {
               disabled={isCompletingBooking}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select a customer" />
+                <SelectValue placeholder={t('selectCustomer')} />
               </SelectTrigger>
               <SelectContent>
                 {customers.map(customer => (
                   <SelectItem key={customer.id} value={customer.id}>
-                    {customer.name} {customer.type === 'new' ? '(New)' : '(Returning)'}
+                    {customer.name} {customer.type === 'new' ? `(${t('new')})` : `(${t('returning')})`}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
             
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={() => document.getElementById('newCustomerAccordion')?.click()}
-              disabled={isCompletingBooking}
-            >
-              Add New Customer
-            </Button>
+            <Sheet open={isCustomerSheetOpen} onOpenChange={setIsCustomerSheetOpen}>
+              <SheetTrigger asChild>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  disabled={isCompletingBooking}
+                >
+                  {t('addNewCustomer')}
+                </Button>
+              </SheetTrigger>
+              <SheetContent className="overflow-y-auto">
+                <SheetHeader>
+                  <SheetTitle>{t('addNewCustomer')}</SheetTitle>
+                </SheetHeader>
+                <CustomerFormSimple onSubmit={handleAddNewCustomer} />
+              </SheetContent>
+            </Sheet>
           </div>
           {errors.customerId && <p className="text-sm text-red-500">{errors.customerId}</p>}
-          
-          <Accordion type="single" collapsible className="w-full">
-            <AccordionItem value="new-customer">
-              <AccordionTrigger id="newCustomerAccordion" className="text-xs">Add New Customer</AccordionTrigger>
-              <AccordionContent>
-                <CustomerForm 
-                  initialData={null}
-                  onSubmit={handleAddNewCustomer}
-                  onCancel={() => {}}
-                />
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
         </div>
         
         {/* Start Date */}
         <div className="space-y-2">
-          <Label htmlFor="startDate">Start Date *</Label>
+          <Label htmlFor="startDate">{t('startDate')} *</Label>
           <Popover>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
                 className={`w-full justify-start text-left ${!startDate && 'text-muted-foreground'}`}
                 disabled={isCompletingBooking}
+                type="button"
               >
-                {startDate ? format(startDate, 'PPP') : 'Select start date'}
+                {startDate ? format(startDate, 'PPP') : t('selectStartDate')}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0">
@@ -309,15 +497,16 @@ const BookingForm = ({ initialData, onSubmit, onCancel }: BookingFormProps) => {
         
         {/* End Date */}
         <div className="space-y-2">
-          <Label htmlFor="endDate">End Date *</Label>
+          <Label htmlFor="endDate">{t('endDate')} *</Label>
           <Popover>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
                 className={`w-full justify-start text-left ${!endDate && 'text-muted-foreground'}`}
                 disabled={isCompletingBooking}
+                type="button"
               >
-                {endDate ? format(endDate, 'PPP') : 'Select end date'}
+                {endDate ? format(endDate, 'PPP') : t('selectEndDate')}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0">
@@ -336,24 +525,24 @@ const BookingForm = ({ initialData, onSubmit, onCancel }: BookingFormProps) => {
         
         {/* Vehicle Selection */}
         <div className="space-y-2">
-          <Label htmlFor="vehicleId">Vehicle *</Label>
+          <Label htmlFor="vehicleId">{t('vehicle')} *</Label>
           <Select 
             value={formData.vehicleId} 
             onValueChange={(value) => handleChange('vehicleId', value)}
             disabled={isCompletingBooking || !startDate || !endDate}
           >
             <SelectTrigger>
-              <SelectValue placeholder={(!startDate || !endDate) ? 'Select dates first' : 'Select a vehicle'} />
+              <SelectValue placeholder={(!startDate || !endDate) ? t('selectDatesFirst') : t('selectVehicle')} />
             </SelectTrigger>
             <SelectContent>
               {availableVehicles.map(vehicle => (
                 <SelectItem key={vehicle.id} value={vehicle.id}>
-                  {vehicle.make} {vehicle.model} ({vehicle.carNumber}) - {vehicle.pricePerDay} OMR/day
+                  {vehicle.make} {vehicle.model} ({vehicle.carNumber}) - {vehicle.pricePerDay} {t('currency')}
                 </SelectItem>
               ))}
               {availableVehicles.length === 0 && startDate && endDate && (
                 <SelectItem value="no-vehicles" disabled>
-                  No vehicles available for selected dates
+                  {t('noVehiclesAvailable')}
                 </SelectItem>
               )}
             </SelectContent>
@@ -363,7 +552,7 @@ const BookingForm = ({ initialData, onSubmit, onCancel }: BookingFormProps) => {
         
         {/* Start KM */}
         <div className="space-y-2">
-          <Label htmlFor="startKm">Start KM Reading *</Label>
+          <Label htmlFor="startKm">{t('startKm')} *</Label>
           <Input
             id="startKm"
             name="startKm"
@@ -379,7 +568,7 @@ const BookingForm = ({ initialData, onSubmit, onCancel }: BookingFormProps) => {
         {/* End KM (Only shown when completing a booking) */}
         {isCompletingBooking && (
           <div className="space-y-2">
-            <Label htmlFor="endKm">Return KM Reading *</Label>
+            <Label htmlFor="endKm">{t('returnKm')} *</Label>
             <Input
               id="endKm"
               name="endKm"
@@ -395,7 +584,7 @@ const BookingForm = ({ initialData, onSubmit, onCancel }: BookingFormProps) => {
         {/* KM Driven (calculated) */}
         {kmDriven !== undefined && (
           <div className="space-y-2">
-            <Label>Kilometers Driven</Label>
+            <Label>{t('kmDriven')}</Label>
             <Input
               type="text"
               value={kmDriven}
@@ -407,7 +596,7 @@ const BookingForm = ({ initialData, onSubmit, onCancel }: BookingFormProps) => {
         
         {/* Status */}
         <div className="space-y-2">
-          <Label htmlFor="status">Status *</Label>
+          <Label htmlFor="status">{t('status')} *</Label>
           <Select 
             value={formData.status} 
             onValueChange={(value) => handleChange('status', value as BookingStatus)}
@@ -418,7 +607,7 @@ const BookingForm = ({ initialData, onSubmit, onCancel }: BookingFormProps) => {
             <SelectContent>
               {statusOptions.map(status => (
                 <SelectItem key={status} value={status}>
-                  {status.charAt(0).toUpperCase() + status.slice(1)}
+                  {t(status)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -428,7 +617,7 @@ const BookingForm = ({ initialData, onSubmit, onCancel }: BookingFormProps) => {
         
         {/* Price */}
         <div className="space-y-2">
-          <Label htmlFor="totalPrice">Total Price (OMR) *</Label>
+          <Label htmlFor="totalPrice">{t('totalPrice')} ({t('currency')}) *</Label>
           <Input
             id="totalPrice"
             name="totalPrice"
@@ -443,10 +632,10 @@ const BookingForm = ({ initialData, onSubmit, onCancel }: BookingFormProps) => {
 
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onCancel}>
-          Cancel
+          {t('cancel')}
         </Button>
         <Button type="submit" className="bg-rental-600 hover:bg-rental-700 text-white">
-          {initialData ? (isCompletingBooking ? 'Complete Booking' : 'Update Booking') : 'Create Booking'}
+          {initialData ? (isCompletingBooking ? t('completeBooking') : t('update')) : t('createBooking')}
         </Button>
       </DialogFooter>
     </form>
