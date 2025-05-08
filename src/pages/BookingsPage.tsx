@@ -3,10 +3,12 @@ import { useState, useEffect } from 'react';
 import AppLayout from "@/components/layout/AppLayout";
 import BookingTable from "@/components/bookings/BookingTable";
 import BranchSelector from "@/components/layout/BranchSelector";
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const BookingsPage = () => {
   const [selectedBranch, setSelectedBranch] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
+  const { t } = useLanguage();
 
   useEffect(() => {
     // Get user information
@@ -34,7 +36,7 @@ const BookingsPage = () => {
     <AppLayout>
       <div className="space-y-6">
         <div className="flex justify-between items-center">
-          <h1 className="page-title">Bookings</h1>
+          <h1 className="page-title">{t('bookings')}</h1>
           <BranchSelector onChange={handleBranchChange} />
         </div>
         

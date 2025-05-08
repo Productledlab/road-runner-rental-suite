@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { getBranches } from '@/lib/storage-service';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const LoginForm = () => {
   const [email, setEmail] = useState('');
@@ -16,6 +17,7 @@ const LoginForm = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const branches = getBranches();
+  const { t, language } = useLanguage();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,7 +37,7 @@ const LoginForm = () => {
             branchAccess: 'all' // Admin has access to all branches
           }));
           toast({
-            title: "Login successful",
+            title: t('login'),
             description: "Welcome to Road Runner Rentals admin portal",
           });
           navigate('/dashboard');
@@ -67,7 +69,7 @@ const LoginForm = () => {
             localStorage.setItem('currentBranch', correctBranchId);
             
             toast({
-              title: "Login successful",
+              title: t('login'),
               description: `Welcome to ${branch ? branch.name : correctBranchId} management portal`,
             });
             navigate('/dashboard');
@@ -76,14 +78,14 @@ const LoginForm = () => {
         }
         
         toast({
-          title: "Login failed",
-          description: "Invalid credentials. Try admin@roadrunner.com/admin123 or branch logins.",
+          title: t('login'),
+          description: t('invalidCredentials'),
           variant: "destructive",
         });
       } else {
         toast({
-          title: "Login failed",
-          description: "Please enter both email and password",
+          title: t('login'),
+          description: t('enterBothFields'),
           variant: "destructive",
         });
       }
@@ -94,27 +96,27 @@ const LoginForm = () => {
     <Card className="w-full max-w-md mx-auto">
       <CardHeader>
         <CardTitle className="text-center text-2xl font-bold">Road Runner Rentals</CardTitle>
-        <CardDescription className="text-center">Sign in to access the management portal</CardDescription>
+        <CardDescription className="text-center">{t('signIn')}</CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4" dir={language === 'ar' ? 'rtl' : 'ltr'}>
           <div className="space-y-2">
-            <label htmlFor="email" className="form-label">Email</label>
+            <label htmlFor="email" className="form-label">{t('email')}</label>
             <Input
               id="email"
               type="email"
-              placeholder="Email address"
+              placeholder={t('email')}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
             />
           </div>
           <div className="space-y-2">
-            <label htmlFor="password" className="form-label">Password</label>
+            <label htmlFor="password" className="form-label">{t('password')}</label>
             <Input
               id="password"
               type="password"
-              placeholder="Password"
+              placeholder={t('password')}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -125,13 +127,13 @@ const LoginForm = () => {
             className="w-full bg-rental-600 hover:bg-rental-700 text-white"
             disabled={isLoading}
           >
-            {isLoading ? 'Logging in...' : 'Log in'}
+            {isLoading ? t('loggingIn') : t('login')}
           </Button>
         </form>
       </CardContent>
       <CardFooter className="flex flex-col space-y-2">
         <div className="text-sm text-center text-gray-500">
-          <p>Demo credentials:</p>
+          <p>{t('demoCredentials')}</p>
           <p>Admin: admin@roadrunner.com / admin123</p>
           <p>Branch 1: branch1@roadrunner.com / branch1</p>
           <p>Branch 2: branch2@roadrunner.com / branch2</p>

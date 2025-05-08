@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { LogOut, Menu } from 'lucide-react';
 import { useState } from 'react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -13,6 +14,7 @@ interface AppLayoutProps {
 const AppLayout = ({ children }: AppLayoutProps) => {
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const { t, language } = useLanguage();
   
   const handleLogout = () => {
     localStorage.removeItem('user');
@@ -24,7 +26,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-gray-50 flex" dir={language === 'ar' ? 'rtl' : 'ltr'}>
       <div className={`${isSidebarOpen ? 'block' : 'hidden'} md:block`}>
         <Sidebar />
       </div>
@@ -42,8 +44,8 @@ const AppLayout = ({ children }: AppLayoutProps) => {
             </Button>
             <h1 className="text-xl font-semibold text-rental-800">Road Runner Rentals</h1>
             <Button variant="ghost" onClick={handleLogout}>
-              <LogOut className="h-5 w-5 mr-2" />
-              <span>Logout</span>
+              <LogOut className={`h-5 w-5 ${language === 'ar' ? 'ml-2' : 'mr-2'}`} />
+              <span>{t('logout')}</span>
             </Button>
           </div>
         </header>

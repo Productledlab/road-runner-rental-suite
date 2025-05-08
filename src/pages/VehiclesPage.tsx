@@ -9,12 +9,14 @@ import { Vehicle } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { saveVehicle } from "@/lib/storage-service";
 import BranchSelector from "@/components/layout/BranchSelector";
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const VehiclesPage = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
   const [selectedBranch, setSelectedBranch] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
+  const { t } = useLanguage();
 
   useEffect(() => {
     // Get user information
@@ -39,7 +41,7 @@ const VehiclesPage = () => {
     saveVehicle(vehicle);
     
     toast({
-      title: "Vehicle added",
+      title: `${t('addNewVehicle')}`,
       description: `${vehicle.make} ${vehicle.model} has been added successfully.`,
     });
     setIsDialogOpen(false);
@@ -58,14 +60,14 @@ const VehiclesPage = () => {
     <AppLayout>
       <div className="space-y-6">
         <div className="flex justify-between items-center">
-          <h1 className="page-title">Vehicles</h1>
+          <h1 className="page-title">{t('vehicles')}</h1>
           <div className="flex items-center gap-4">
             <BranchSelector onChange={handleBranchChange} />
             <Button 
               onClick={() => setIsDialogOpen(true)}
               className="bg-rental-600 hover:bg-rental-700 text-white"
             >
-              Add New Vehicle
+              {t('addNewVehicle')}
             </Button>
           </div>
         </div>
