@@ -15,6 +15,8 @@ import { DialogTitle, DialogHeader, DialogFooter, DialogDescription } from '@/co
 import { getCurrentBranch, getUniqueMakes, getUniqueModels } from '@/lib/storage-service';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { X } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface VehicleFormProps {
   initialData: Vehicle | null;
@@ -45,6 +47,7 @@ const VehicleForm = ({ initialData, onSubmit, onCancel }: VehicleFormProps) => {
   const [newMake, setNewMake] = useState<string>('');
   const [newModel, setNewModel] = useState<string>('');
   const [currentTab, setCurrentTab] = useState('general');
+  const { t } = useLanguage();
   
   // Image handling
   const [images, setImages] = useState<File[]>([]);
@@ -155,6 +158,25 @@ const VehicleForm = ({ initialData, onSubmit, onCancel }: VehicleFormProps) => {
       }));
     }
   };
+  
+  const handleRemoveImage = (index: number) => {
+    const newImageUrls = [...imageUrls];
+    newImageUrls[index] = '';
+    setImageUrls(newImageUrls);
+    
+    const newImages = [...images];
+    newImages[index] = null as unknown as File;
+    setImages(newImages);
+    
+    setFormData(prev => {
+      const newImages = [...(prev.images || [])];
+      newImages[index] = '';
+      return {
+        ...prev,
+        images: newImages.filter(Boolean)
+      };
+    });
+  };
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -192,23 +214,23 @@ const VehicleForm = ({ initialData, onSubmit, onCancel }: VehicleFormProps) => {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <DialogHeader>
-        <DialogTitle>{initialData ? 'Edit Vehicle' : 'Add New Vehicle'}</DialogTitle>
+        <DialogTitle>{initialData ? t('edit') + ' ' + t('vehicle') : t('addNewVehicle')}</DialogTitle>
         <DialogDescription>
-          {initialData ? 'Update vehicle information' : 'Enter details for the new vehicle'}
+          {initialData ? t('vehicleUpdatedDesc') : t('enterBookingDetails')}
         </DialogDescription>
       </DialogHeader>
       
       <Tabs defaultValue="general" onValueChange={setCurrentTab} className="w-full">
         <TabsList className="grid grid-cols-3 mb-4">
-          <TabsTrigger value="general">General</TabsTrigger>
-          <TabsTrigger value="specifications">Specifications</TabsTrigger>
-          <TabsTrigger value="images">Images</TabsTrigger>
+          <TabsTrigger value="general">{t('general')}</TabsTrigger>
+          <TabsTrigger value="specifications">{t('specifications')}</TabsTrigger>
+          <TabsTrigger value="images">{t('images')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="general" className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="carNumber">Car Number *</Label>
+              <Label htmlFor="carNumber">{t('carNumber')} *</Label>
               <Input
                 id="carNumber"
                 name="carNumber"
@@ -220,7 +242,7 @@ const VehicleForm = ({ initialData, onSubmit, onCancel }: VehicleFormProps) => {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
+              <Label htmlFor="status">{t('status')}</Label>
               <Select 
                 value={formData.status} 
                 onValueChange={(value) => handleSelectChange('status', value)}
@@ -229,15 +251,15 @@ const VehicleForm = ({ initialData, onSubmit, onCancel }: VehicleFormProps) => {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="available">Available</SelectItem>
-                  <SelectItem value="booked">Booked</SelectItem>
-                  <SelectItem value="maintenance">Maintenance</SelectItem>
+                  <SelectItem value="available">{t('available')}</SelectItem>
+                  <SelectItem value="booked">{t('booked')}</SelectItem>
+                  <SelectItem value="maintenance">{t('maintenance')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="make">Make *</Label>
+              <Label htmlFor="make">{t('make')} *</Label>
               <div className="grid grid-cols-5 gap-2">
                 <div className="col-span-4">
                   <Select 
@@ -245,7 +267,7 @@ const VehicleForm = ({ initialData, onSubmit, onCancel }: VehicleFormProps) => {
                     onValueChange={(value) => handleSelectChange('make', value)}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select a make" />
+                      <SelectValue placeholder={t('selectVehicle')} />
                     </SelectTrigger>
                     <SelectContent>
                       {makes.map(make => (
@@ -260,21 +282,21 @@ const VehicleForm = ({ initialData, onSubmit, onCancel }: VehicleFormProps) => {
                   onClick={() => document.getElementById('newMakeAccordion')?.click()}
                   className="col-span-1"
                 >
-                  Add
+                  {t('add')}
                 </Button>
               </div>
               
               <Accordion type="single" collapsible className="w-full">
                 <AccordionItem value="new-make">
-                  <AccordionTrigger id="newMakeAccordion" className="text-xs">Add New Make</AccordionTrigger>
+                  <AccordionTrigger id="newMakeAccordion" className="text-xs">{t('add')} {t('make')}</AccordionTrigger>
                   <AccordionContent>
                     <div className="flex space-x-2">
                       <Input
                         value={newMake}
                         onChange={e => setNewMake(e.target.value)}
-                        placeholder="Enter new make"
+                        placeholder={t('enterNewMake')}
                       />
-                      <Button type="button" onClick={handleAddNewMake}>Add</Button>
+                      <Button type="button" onClick={handleAddNewMake}>{t('add')}</Button>
                     </div>
                   </AccordionContent>
                 </AccordionItem>
@@ -284,7 +306,7 @@ const VehicleForm = ({ initialData, onSubmit, onCancel }: VehicleFormProps) => {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="model">Model *</Label>
+              <Label htmlFor="model">{t('model')} *</Label>
               <div className="grid grid-cols-5 gap-2">
                 <div className="col-span-4">
                   <Select 
@@ -293,7 +315,7 @@ const VehicleForm = ({ initialData, onSubmit, onCancel }: VehicleFormProps) => {
                     disabled={!formData.make}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder={formData.make ? "Select a model" : "Select make first"} />
+                      <SelectValue placeholder={formData.make ? t('selectVehicle') : t('selectDatesFirst')} />
                     </SelectTrigger>
                     <SelectContent>
                       {models.map(model => (
@@ -309,22 +331,22 @@ const VehicleForm = ({ initialData, onSubmit, onCancel }: VehicleFormProps) => {
                   className="col-span-1"
                   disabled={!formData.make}
                 >
-                  Add
+                  {t('add')}
                 </Button>
               </div>
               
               <Accordion type="single" collapsible className="w-full">
                 <AccordionItem value="new-model">
-                  <AccordionTrigger id="newModelAccordion" className="text-xs">Add New Model</AccordionTrigger>
+                  <AccordionTrigger id="newModelAccordion" className="text-xs">{t('add')} {t('model')}</AccordionTrigger>
                   <AccordionContent>
                     <div className="flex space-x-2">
                       <Input
                         value={newModel}
                         onChange={e => setNewModel(e.target.value)}
-                        placeholder="Enter new model"
+                        placeholder={t('enterNewModel')}
                         disabled={!formData.make}
                       />
-                      <Button type="button" onClick={handleAddNewModel} disabled={!formData.make}>Add</Button>
+                      <Button type="button" onClick={handleAddNewModel} disabled={!formData.make}>{t('add')}</Button>
                     </div>
                   </AccordionContent>
                 </AccordionItem>
@@ -334,7 +356,7 @@ const VehicleForm = ({ initialData, onSubmit, onCancel }: VehicleFormProps) => {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="currentKm">Current KM Reading *</Label>
+              <Label htmlFor="currentKm">{t('currentKm')} *</Label>
               <Input
                 id="currentKm"
                 name="currentKm"
@@ -347,7 +369,7 @@ const VehicleForm = ({ initialData, onSubmit, onCancel }: VehicleFormProps) => {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="pricePerDay">Price Per Day (OMR) *</Label>
+              <Label htmlFor="pricePerDay">{t('pricePerDay')} *</Label>
               <Input
                 id="pricePerDay"
                 name="pricePerDay"
@@ -365,7 +387,7 @@ const VehicleForm = ({ initialData, onSubmit, onCancel }: VehicleFormProps) => {
         <TabsContent value="specifications" className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="year">Year *</Label>
+              <Label htmlFor="year">{t('year')} *</Label>
               <Input
                 id="year"
                 name="year"
@@ -378,7 +400,7 @@ const VehicleForm = ({ initialData, onSubmit, onCancel }: VehicleFormProps) => {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="color">Color *</Label>
+              <Label htmlFor="color">{t('color')} *</Label>
               <Input
                 id="color"
                 name="color"
@@ -390,7 +412,7 @@ const VehicleForm = ({ initialData, onSubmit, onCancel }: VehicleFormProps) => {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="fuelType">Fuel Type</Label>
+              <Label htmlFor="fuelType">{t('fuelType')}</Label>
               <Select 
                 value={formData.fuelType} 
                 onValueChange={(value) => handleSelectChange('fuelType', value as FuelType)}
@@ -399,16 +421,16 @@ const VehicleForm = ({ initialData, onSubmit, onCancel }: VehicleFormProps) => {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="petrol">Petrol</SelectItem>
-                  <SelectItem value="diesel">Diesel</SelectItem>
-                  <SelectItem value="electric">Electric</SelectItem>
-                  <SelectItem value="hybrid">Hybrid</SelectItem>
+                  <SelectItem value="petrol">{t('petrol')}</SelectItem>
+                  <SelectItem value="diesel">{t('diesel')}</SelectItem>
+                  <SelectItem value="electric">{t('electric')}</SelectItem>
+                  <SelectItem value="hybrid">{t('hybrid')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="type">Vehicle Type</Label>
+              <Label htmlFor="type">{t('type')}</Label>
               <Select 
                 value={formData.type} 
                 onValueChange={(value) => handleSelectChange('type', value as VehicleType)}
@@ -417,11 +439,11 @@ const VehicleForm = ({ initialData, onSubmit, onCancel }: VehicleFormProps) => {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="sedan">Sedan</SelectItem>
-                  <SelectItem value="suv">SUV</SelectItem>
-                  <SelectItem value="hatchback">Hatchback</SelectItem>
-                  <SelectItem value="luxury">Luxury</SelectItem>
-                  <SelectItem value="van">Van</SelectItem>
+                  <SelectItem value="sedan">{t('sedan')}</SelectItem>
+                  <SelectItem value="suv">{t('suv')}</SelectItem>
+                  <SelectItem value="hatchback">{t('hatchback')}</SelectItem>
+                  <SelectItem value="luxury">{t('luxury')}</SelectItem>
+                  <SelectItem value="van">{t('van')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -432,15 +454,28 @@ const VehicleForm = ({ initialData, onSubmit, onCancel }: VehicleFormProps) => {
           <div className="grid grid-cols-2 gap-4">
             {imageTypes.map((type, index) => (
               <div key={type} className="space-y-2">
-                <Label htmlFor={`image-${type}`}>{type.charAt(0).toUpperCase() + type.slice(1)} View</Label>
+                <Label htmlFor={`image-${type}`}>{type.charAt(0).toUpperCase() + type.slice(1)} {t('view')}</Label>
                 <div className="flex flex-col space-y-2">
-                  {imageUrls[index] && (
+                  {imageUrls[index] ? (
                     <div className="relative w-full h-40 border rounded overflow-hidden">
                       <img 
                         src={imageUrls[index]} 
                         alt={`${type} view`} 
                         className="w-full h-full object-cover"
                       />
+                      <Button 
+                        type="button"
+                        variant="destructive" 
+                        size="icon" 
+                        className="absolute top-2 right-2 h-6 w-6"
+                        onClick={() => handleRemoveImage(index)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="w-full h-40 border rounded flex items-center justify-center bg-gray-50">
+                      <span className="text-gray-400">{t('noImage')}</span>
                     </div>
                   )}
                   <Input
@@ -458,10 +493,10 @@ const VehicleForm = ({ initialData, onSubmit, onCancel }: VehicleFormProps) => {
 
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onCancel}>
-          Cancel
+          {t('cancel')}
         </Button>
         <Button type="submit" className="bg-rental-600 hover:bg-rental-700 text-white">
-          {initialData ? 'Update Vehicle' : 'Add Vehicle'}
+          {initialData ? t('update') + ' ' + t('vehicle') : t('addNewVehicle')}
         </Button>
       </DialogFooter>
     </form>

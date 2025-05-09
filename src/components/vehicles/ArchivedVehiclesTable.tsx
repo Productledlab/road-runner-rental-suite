@@ -5,9 +5,11 @@ import { Button } from '@/components/ui/button';
 import { mockArchivedVehicles } from '@/lib/mock-data';
 import { Vehicle } from '@/lib/types';
 import { ArrowLeft } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const ArchivedVehiclesTable = () => {
   const [vehicles, setVehicles] = useState<Vehicle[]>(mockArchivedVehicles);
+  const { t } = useLanguage();
 
   const handleRestore = (vehicleId: string) => {
     // Implementation would move the vehicle back to active vehicles
@@ -21,13 +23,13 @@ const ArchivedVehiclesTable = () => {
         <Table>
           <TableHeader>
             <TableRow className="table-header">
-              <TableHead>Car Number</TableHead>
-              <TableHead>Vehicle</TableHead>
-              <TableHead>Year</TableHead>
-              <TableHead>Color</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Fuel Type</TableHead>
-              <TableHead>Actions</TableHead>
+              <TableHead>{t('carNumber')}</TableHead>
+              <TableHead>{t('vehicle')}</TableHead>
+              <TableHead>{t('year')}</TableHead>
+              <TableHead>{t('color')}</TableHead>
+              <TableHead>{t('type')}</TableHead>
+              <TableHead>{t('fuelType')}</TableHead>
+              <TableHead>{t('actions')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -38,10 +40,10 @@ const ArchivedVehiclesTable = () => {
                 <TableCell>{vehicle.year}</TableCell>
                 <TableCell>{vehicle.color}</TableCell>
                 <TableCell>
-                  {vehicle.type.charAt(0).toUpperCase() + vehicle.type.slice(1)}
+                  {t(vehicle.type)}
                 </TableCell>
                 <TableCell>
-                  {vehicle.fuelType.charAt(0).toUpperCase() + vehicle.fuelType.slice(1)}
+                  {t(vehicle.fuelType)}
                 </TableCell>
                 <TableCell>
                   <Button 
@@ -50,7 +52,7 @@ const ArchivedVehiclesTable = () => {
                     onClick={() => handleRestore(vehicle.id)}
                   >
                     <ArrowLeft className="h-4 w-4 mr-2" />
-                    Restore
+                    {t('cancel')}
                   </Button>
                 </TableCell>
               </TableRow>
@@ -58,7 +60,7 @@ const ArchivedVehiclesTable = () => {
             {vehicles.length === 0 && (
               <TableRow>
                 <TableCell colSpan={7} className="h-24 text-center">
-                  No archived vehicles found.
+                  {t('noVehiclesFound')}
                 </TableCell>
               </TableRow>
             )}

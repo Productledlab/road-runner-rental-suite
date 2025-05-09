@@ -169,6 +169,16 @@ const translations: Translations = {
   createBooking: { en: "Create Booking", ar: "إنشاء حجز" },
   updateCustomer: { en: "Update Customer", ar: "تحديث العميل" },
   addCustomer: { en: "Add Customer", ar: "إضافة عميل" },
+  general: { en: "General", ar: "عام" },
+  specifications: { en: "Specifications", ar: "المواصفات" },
+  images: { en: "Images", ar: "الصور" },
+  view: { en: "View", ar: "عرض" },
+  noImage: { en: "No Image", ar: "لا توجد صورة" },
+  make: { en: "Make", ar: "الشركة المصنعة" },
+  model: { en: "Model", ar: "الطراز" },
+  enterNewMake: { en: "Enter new make", ar: "أدخل شركة مصنعة جديدة" },
+  enterNewModel: { en: "Enter new model", ar: "أدخل طراز جديد" },
+  archivedVehiclesDesc: { en: "View and manage archived vehicles", ar: "عرض وإدارة المركبات المؤرشفة" },
   
   // Currency
   currency: { en: "$", ar: "ر.ع." },

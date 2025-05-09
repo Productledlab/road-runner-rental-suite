@@ -27,11 +27,11 @@ const AppLayout = ({ children }: AppLayoutProps) => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex" dir={language === 'ar' ? 'rtl' : 'ltr'}>
-      <div className={`${isSidebarOpen ? 'block' : 'hidden'} md:block fixed h-screen`}>
+      <div className={`${isSidebarOpen ? 'block' : 'hidden'} md:block fixed h-screen z-20`}>
         <Sidebar />
       </div>
       
-      <div className={`flex-1 flex flex-col overflow-hidden ${isSidebarOpen ? 'md:ml-64' : ''}`}>
+      <div className={`flex-1 flex flex-col overflow-hidden ${isSidebarOpen ? 'md:ms-64' : ''}`}>
         <header className="bg-white shadow-sm z-10">
           <div className="px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
             <Button
@@ -50,7 +50,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
           </div>
         </header>
         
-        <main className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-8">
+        <main className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-8 relative">
           {children}
         </main>
       </div>
