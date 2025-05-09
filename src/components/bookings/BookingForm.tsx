@@ -12,7 +12,6 @@ import { format } from 'date-fns';
 import { getCurrentBranch, getCustomers, getVehicles, getAvailableVehicles, saveCustomer, saveVehicle } from '@/lib/storage-service';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 
 // Create a simplified version of CustomerForm that doesn't use <form> elements
 // to avoid nested forms
@@ -145,22 +144,6 @@ const CustomerFormSimple = ({ onSubmit }: { onSubmit: (customer: Customer) => vo
           />
         </div>
         
-        <div className="space-y-2">
-          <Label htmlFor="type">{t('customerType')}</Label>
-          <Select 
-            value={formData.type} 
-            onValueChange={(value) => handleSelectChange('type', value)}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="new">{t('new')}</SelectItem>
-              <SelectItem value="returning">{t('returning')}</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        
         <div className="space-y-2 col-span-2">
           <Label htmlFor="address">{t('address')}</Label>
           <Input
@@ -219,10 +202,15 @@ const BookingForm = ({ initialData, onSubmit, onCancel }: BookingFormProps) => {
   const [availableVehicles, setAvailableVehicles] = useState<any[]>([]);
   const [isCompletingBooking, setIsCompletingBooking] = useState(false);
   const [kmDriven, setKmDriven] = useState<number | undefined>(undefined);
-  const [isCustomerSheetOpen, setIsCustomerSheetOpen] = useState(false);
+  const [showCustomerForm, setShowCustomerForm] = useState(false);
+  const [userRole, setUserRole] = useState<string>('');
   const { t } = useLanguage();
   
   useEffect(() => {
+    // Get user role
+    const user = JSON.parse(localStorage.getItem('user') || '{"role": ""}');
+    setUserRole(user.role || '');
+
     if (initialData) {
       setFormData(initialData);
       setStartDate(new Date(initialData.startDate));
@@ -343,8 +331,8 @@ const BookingForm = ({ initialData, onSubmit, onCancel }: BookingFormProps) => {
       customerId: savedCustomer.id
     }));
 
-    // Close the sheet
-    setIsCustomerSheetOpen(false);
+    // Hide the customer form
+    setShowCustomerForm(false);
   };
 
   const validateForm = (): boolean => {
@@ -408,9 +396,10 @@ const BookingForm = ({ initialData, onSubmit, onCancel }: BookingFormProps) => {
     }
   };
 
-  const statusOptions: BookingStatus[] = isCompletingBooking 
-    ? ['completed', 'cancelled'] 
-    : ['pending', 'ongoing', 'completed', 'cancelled'];
+  // Only allow status change if admin, or if completing/canceling a booking
+  const statusOptions: BookingStatus[] = userRole === 'admin'
+    ? ['pending', 'ongoing', 'completed', 'cancelled', 'archived']
+    : (isCompletingBooking ? ['completed', 'cancelled'] : ['pending', 'ongoing']);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -427,7 +416,7 @@ const BookingForm = ({ initialData, onSubmit, onCancel }: BookingFormProps) => {
       
       <div className="grid grid-cols-2 gap-4">
         {/* Customer Selection */}
-        <div className="space-y-2">
+        <div className="space-y-2 col-span-2">
           <Label htmlFor="customerId">{t('customer')} *</Label>
           <div className="flex flex-col gap-2">
             <Select 
@@ -441,32 +430,30 @@ const BookingForm = ({ initialData, onSubmit, onCancel }: BookingFormProps) => {
               <SelectContent>
                 {customers.map(customer => (
                   <SelectItem key={customer.id} value={customer.id}>
-                    {customer.name} {customer.type === 'new' ? `(${t('new')})` : `(${t('returning')})`}
+                    {customer.name}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
             
-            <Sheet open={isCustomerSheetOpen} onOpenChange={setIsCustomerSheetOpen}>
-              <SheetTrigger asChild>
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  disabled={isCompletingBooking}
-                >
-                  {t('addNewCustomer')}
-                </Button>
-              </SheetTrigger>
-              <SheetContent className="overflow-y-auto">
-                <SheetHeader>
-                  <SheetTitle>{t('addNewCustomer')}</SheetTitle>
-                </SheetHeader>
-                <CustomerFormSimple onSubmit={handleAddNewCustomer} />
-              </SheetContent>
-            </Sheet>
+            <Button 
+              type="button" 
+              variant="outline"
+              onClick={() => setShowCustomerForm(!showCustomerForm)}
+              disabled={isCompletingBooking}
+            >
+              {showCustomerForm ? t('cancel') : t('addNewCustomer')}
+            </Button>
           </div>
           {errors.customerId && <p className="text-sm text-red-500">{errors.customerId}</p>}
         </div>
+        
+        {/* Add Customer Form (conditionally rendered) */}
+        {showCustomerForm && (
+          <div className="col-span-2 border p-4 rounded-md max-h-80 overflow-y-auto">
+            <CustomerFormSimple onSubmit={handleAddNewCustomer} />
+          </div>
+        )}
         
         {/* Start Date */}
         <div className="space-y-2">
@@ -600,6 +587,7 @@ const BookingForm = ({ initialData, onSubmit, onCancel }: BookingFormProps) => {
           <Select 
             value={formData.status} 
             onValueChange={(value) => handleChange('status', value as BookingStatus)}
+            disabled={userRole !== 'admin' && !isCompletingBooking}
           >
             <SelectTrigger>
               <SelectValue />

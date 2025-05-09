@@ -52,7 +52,7 @@ const ArchivedVehiclesTable = () => {
                     onClick={() => handleRestore(vehicle.id)}
                   >
                     <ArrowLeft className="h-4 w-4 mr-2" />
-                    {t('cancel')}
+                    {t('restore')}
                   </Button>
                 </TableCell>
               </TableRow>

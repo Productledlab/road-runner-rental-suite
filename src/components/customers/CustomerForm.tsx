@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { DialogTitle, DialogHeader, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface CustomerFormProps {
   initialData: Customer | null;
@@ -29,8 +30,14 @@ const defaultCustomer: Customer = {
 const CustomerForm = ({ initialData, onSubmit, onCancel }: CustomerFormProps) => {
   const [formData, setFormData] = useState<Customer>(initialData || defaultCustomer);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [userRole, setUserRole] = useState<string>('');
+  const { t } = useLanguage();
   
   useEffect(() => {
+    // Get user role
+    const user = JSON.parse(localStorage.getItem('user') || '{"role": ""}');
+    setUserRole(user.role || '');
+
     if (initialData) {
       setFormData(initialData);
     } else {
@@ -97,12 +104,12 @@ const CustomerForm = ({ initialData, onSubmit, onCancel }: CustomerFormProps) =>
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <DialogHeader>
-        <DialogTitle>{initialData ? 'Edit Customer' : 'Add New Customer'}</DialogTitle>
+        <DialogTitle>{initialData ? t('updateCustomer') : t('addCustomer')}</DialogTitle>
       </DialogHeader>
       
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="name">Full Name *</Label>
+          <Label htmlFor="name">{t('fullName')} *</Label>
           <Input
             id="name"
             name="name"
@@ -114,7 +121,7 @@ const CustomerForm = ({ initialData, onSubmit, onCancel }: CustomerFormProps) =>
         </div>
         
         <div className="space-y-2">
-          <Label htmlFor="email">Email Address *</Label>
+          <Label htmlFor="email">{t('emailAddress')} *</Label>
           <Input
             id="email"
             name="email"
@@ -127,7 +134,7 @@ const CustomerForm = ({ initialData, onSubmit, onCancel }: CustomerFormProps) =>
         </div>
         
         <div className="space-y-2">
-          <Label htmlFor="phone">Phone Number *</Label>
+          <Label htmlFor="phone">{t('phoneNumber')} *</Label>
           <Input
             id="phone"
             name="phone"
@@ -139,7 +146,7 @@ const CustomerForm = ({ initialData, onSubmit, onCancel }: CustomerFormProps) =>
         </div>
         
         <div className="space-y-2">
-          <Label htmlFor="passport">Passport Number *</Label>
+          <Label htmlFor="passport">{t('passportNumber')} *</Label>
           <Input
             id="passport"
             name="passport"
@@ -151,7 +158,7 @@ const CustomerForm = ({ initialData, onSubmit, onCancel }: CustomerFormProps) =>
         </div>
         
         <div className="space-y-2">
-          <Label htmlFor="visa">Visa Number</Label>
+          <Label htmlFor="visa">{t('visaNumber')}</Label>
           <Input
             id="visa"
             name="visa"
@@ -161,24 +168,26 @@ const CustomerForm = ({ initialData, onSubmit, onCancel }: CustomerFormProps) =>
           />
         </div>
         
-        <div className="space-y-2">
-          <Label htmlFor="type">Customer Type</Label>
-          <Select 
-            value={formData.type} 
-            onValueChange={(value) => handleSelectChange('type', value as CustomerType)}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="new">New</SelectItem>
-              <SelectItem value="returning">Returning</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        {userRole === 'admin' && (
+          <div className="space-y-2">
+            <Label htmlFor="type">{t('customerType')}</Label>
+            <Select 
+              value={formData.type} 
+              onValueChange={(value) => handleSelectChange('type', value as CustomerType)}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="new">{t('new')}</SelectItem>
+                <SelectItem value="returning">{t('returning')}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
         
         <div className="space-y-2 col-span-2">
-          <Label htmlFor="address">Address</Label>
+          <Label htmlFor="address">{t('address')}</Label>
           <Input
             id="address"
             name="address"
@@ -191,10 +200,10 @@ const CustomerForm = ({ initialData, onSubmit, onCancel }: CustomerFormProps) =>
 
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onCancel}>
-          Cancel
+          {t('cancel')}
         </Button>
         <Button type="submit" className="bg-rental-600 hover:bg-rental-700 text-white">
-          {initialData ? 'Update Customer' : 'Add Customer'}
+          {initialData ? t('updateCustomer') : t('addCustomer')}
         </Button>
       </DialogFooter>
     </form>

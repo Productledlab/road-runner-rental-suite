@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Booking, BookingStatus } from '@/lib/types';
-import { Edit } from 'lucide-react';
+import { Archive, Edit } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
@@ -30,6 +30,8 @@ const getBadgeColorForStatus = (status: string) => {
       return 'bg-amber-100 text-amber-800';
     case 'cancelled':
       return 'bg-red-100 text-red-800';
+    case 'archived':
+      return 'bg-gray-100 text-gray-800';
     default:
       return 'bg-gray-100 text-gray-800';
   }
@@ -44,10 +46,15 @@ const BookingTable = ({ branchId }: BookingTableProps) => {
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [userRole, setUserRole] = useState<string>('');
   const { toast } = useToast();
   const { t } = useLanguage();
 
   useEffect(() => {
+    // Get user role
+    const user = JSON.parse(localStorage.getItem('user') || '{"role": ""}');
+    setUserRole(user.role || '');
+
     // Load bookings from local storage
     const loadedBookings = getBookings(branchId);
     setBookings(loadedBookings);
@@ -140,6 +147,35 @@ const BookingTable = ({ branchId }: BookingTableProps) => {
     });
   };
 
+  const handleArchiveBooking = (bookingId: string) => {
+    // Find the booking
+    const booking = bookings.find(b => b.id === bookingId);
+    if (!booking) return;
+
+    // Update status to archived
+    const updatedBooking: Booking = {
+      ...booking,
+      status: 'archived',
+      updatedAt: new Date().toISOString()
+    };
+
+    // Save to local storage
+    saveBooking(updatedBooking);
+    
+    // Update local state
+    const updatedBookings = bookings.map(b => 
+      b.id === bookingId ? updatedBooking : b
+    );
+    
+    setBookings(updatedBookings);
+    setFilteredBookings(updatedBookings);
+    
+    toast({
+      title: t('bookingArchived'),
+      description: t('bookingArchivedDesc')
+    });
+  };
+
   const handleAddNewBooking = () => {
     setEditingBooking(null);
     setIsDialogOpen(true);
@@ -161,7 +197,7 @@ const BookingTable = ({ branchId }: BookingTableProps) => {
     });
   };
 
-  const statusOptions: BookingStatus[] = ['pending', 'ongoing', 'completed', 'cancelled'];
+  const statusOptions: BookingStatus[] = ['pending', 'ongoing', 'completed', 'cancelled', 'archived'];
   const customers = getCustomers();
   const vehicles = getVehicles();
 
@@ -268,7 +304,7 @@ const BookingTable = ({ branchId }: BookingTableProps) => {
               
               return (
                 <TableRow key={booking.id} className="hover:bg-muted/50">
-                  <TableCell className="font-mono text-sm">{booking.id}</TableCell>
+                  <TableCell className="font-mono text-xs">{booking.id.substring(0, 8)}</TableCell>
                   <TableCell className="font-medium">{customer?.name || 'Unknown'}</TableCell>
                   <TableCell>{vehicle ? `${vehicle.make} ${vehicle.model}` : 'Unknown'}</TableCell>
                   <TableCell>{format(new Date(booking.startDate), 'MMM dd, yyyy')}</TableCell>
@@ -279,14 +315,25 @@ const BookingTable = ({ branchId }: BookingTableProps) => {
                     </Badge>
                   </TableCell>
                   <TableCell>{booking.totalPrice} {t('currency')}</TableCell>
-                  <TableCell>
+                  <TableCell className="space-x-2">
                     <Button 
                       variant="outline" 
                       size="sm"
                       onClick={() => handleEdit(booking)}
+                      disabled={booking.status === 'archived' || (userRole !== 'admin' && booking.status === 'booked')}
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
+                    
+                    {booking.status !== 'archived' && (
+                      <Button 
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleArchiveBooking(booking.id)}
+                      >
+                        <Archive className="h-4 w-4" />
+                      </Button>
+                    )}
                   </TableCell>
                 </TableRow>
               );

@@ -29,8 +29,10 @@ const translations: Translations = {
   
   // Dashboard
   recentBookings: { en: "Recent Bookings", ar: "الحجوزات الأخيرة" },
-  totalVehicles: { en: "Total Vehicles", ar: "إجمالي المركبات" },
+  totalVehicles: { en: "Total Active Vehicles", ar: "إجمالي المركبات النشطة" },
+  availableVehicles: { en: "Available Vehicles", ar: "المركبات المتاحة" },
   activeBookings: { en: "Active Bookings", ar: "الحجوزات النشطة" },
+  totalRevenue: { en: "Total Revenue", ar: "إجمالي الإيرادات" },
   monthlyRevenue: { en: "Monthly Revenue", ar: "الإيرادات الشهرية" },
   fleetStatus: { en: "Fleet Status", ar: "حالة الأسطول" },
   revenue: { en: "Revenue", ar: "الإيرادات" },
@@ -43,6 +45,7 @@ const translations: Translations = {
   
   // Bookings page
   addNewBooking: { en: "Add New Booking", ar: "إضافة حجز جديد" },
+  archiveBooking: { en: "Archive Booking", ar: "أرشفة الحجز" },
   
   // Settings page
   userManagement: { en: "User Management", ar: "إدارة المستخدمين" },
@@ -60,6 +63,9 @@ const translations: Translations = {
   delete: { en: "Delete", ar: "حذف" },
   search: { en: "Search", ar: "بحث" },
   filter: { en: "Filter", ar: "تصفية" },
+  removeImage: { en: "Remove Image", ar: "إزالة الصورة" },
+  archive: { en: "Archive", ar: "أرشفة" },
+  restore: { en: "Restore", ar: "استعادة" },
   
   // Login page
   email: { en: "Email", ar: "البريد الإلكتروني" },
@@ -77,6 +83,7 @@ const translations: Translations = {
   
   // Table headers and column names
   bookingId: { en: "Booking ID", ar: "رقم الحجز" },
+  customerId: { en: "Customer ID", ar: "رقم العميل" },
   customer: { en: "Customer", ar: "العميل" },
   vehicle: { en: "Vehicle", ar: "المركبة" },
   startDate: { en: "Start Date", ar: "تاريخ البدء" },
@@ -92,8 +99,11 @@ const translations: Translations = {
   currentKm: { en: "Current KM", ar: "الكيلومترات الحالية" },
   pricePerDay: { en: "Price/Day", ar: "السعر/يوم" },
   name: { en: "Name", ar: "الاسم" },
+  email: { en: "Email", ar: "البريد الإلكتروني" },
   phone: { en: "Phone", ar: "الهاتف" },
+  passport: { en: "Passport", ar: "جواز السفر" },
   dateAdded: { en: "Date Added", ar: "تاريخ الإضافة" },
+  branch: { en: "Branch", ar: "الفرع" },
   
   // Form fields and labels
   fullName: { en: "Full Name", ar: "الاسم الكامل" },
@@ -159,6 +169,8 @@ const translations: Translations = {
   bookingUpdatedDesc: { en: "Booking has been updated successfully.", ar: "تم تحديث الحجز بنجاح." },
   bookingCreated: { en: "Booking created", ar: "تم إنشاء الحجز" },
   bookingCreatedDesc: { en: "New booking has been created successfully.", ar: "تم إنشاء حجز جديد بنجاح." },
+  bookingArchived: { en: "Booking archived", ar: "تم أرشفة الحجز" },
+  bookingArchivedDesc: { en: "The booking has been archived.", ar: "تم أرشفة الحجز." },
   newBooking: { en: "New Booking", ar: "حجز جديد" },
   createNewBooking: { en: "Create New Booking", ar: "إنشاء حجز جديد" },
   editBooking: { en: "Edit Booking", ar: "تحرير الحجز" },
@@ -180,9 +192,14 @@ const translations: Translations = {
   enterNewModel: { en: "Enter new model", ar: "أدخل طراز جديد" },
   archivedVehiclesDesc: { en: "View and manage archived vehicles", ar: "عرض وإدارة المركبات المؤرشفة" },
   
+  // Dashboard widgets
+  totalActiveVehicles: { en: "Total Active Vehicles", ar: "إجمالي المركبات النشطة" },
+  
   // Currency
-  currency: { en: "$", ar: "ر.ع." },
+  currency: { en: "R.O.", ar: "ر.ع." },
   perDay: { en: "/day", ar: "/يوم" },
+  required: { en: "is required", ar: "مطلوب" },
+  enterValidEmail: { en: "Please enter a valid email address", ar: "يرجى إدخال عنوان بريد إلكتروني صالح" },
 };
 
 type LanguageContextType = {

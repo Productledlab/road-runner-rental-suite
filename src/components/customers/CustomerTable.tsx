@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Customer, CustomerType } from '@/lib/types';
@@ -11,6 +10,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { format } from 'date-fns';
 import { getCustomers, saveCustomer, getCurrentBranch } from '@/lib/storage-service';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface CustomerTableProps {
   branchId?: string;
@@ -22,9 +22,15 @@ const CustomerTable = ({ branchId }: CustomerTableProps) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [userRole, setUserRole] = useState<string>('');
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   useEffect(() => {
+    // Get user role
+    const user = JSON.parse(localStorage.getItem('user') || '{"role": ""}');
+    setUserRole(user.role || '');
+
     // Load customers from local storage
     const loadedCustomers = getCustomers(branchId);
     setCustomers(loadedCustomers);
@@ -73,7 +79,7 @@ const CustomerTable = ({ branchId }: CustomerTableProps) => {
     setIsDialogOpen(false);
     
     toast({
-      title: "Customer updated",
+      title: t('updateCustomer'),
       description: "Customer information has been updated successfully."
     });
   };
@@ -101,7 +107,7 @@ const CustomerTable = ({ branchId }: CustomerTableProps) => {
     setIsDialogOpen(false);
     
     toast({
-      title: "Customer added",
+      title: t('addCustomer'),
       description: "New customer has been added successfully."
     });
   };
@@ -111,7 +117,7 @@ const CustomerTable = ({ branchId }: CustomerTableProps) => {
       <div className="flex justify-between items-center mb-6">
         <div className="w-full max-w-sm">
           <Input
-            placeholder="Search customers..."
+            placeholder={t('searchCustomerName')}
             value={searchTerm}
             onChange={handleSearch}
             className="w-full"
@@ -121,7 +127,7 @@ const CustomerTable = ({ branchId }: CustomerTableProps) => {
           onClick={handleAddNewCustomer}
           className="bg-rental-600 hover:bg-rental-700 text-white"
         >
-          Add New Customer
+          {t('addNewCustomer')}
         </Button>
       </div>
 
@@ -129,28 +135,40 @@ const CustomerTable = ({ branchId }: CustomerTableProps) => {
         <Table>
           <TableHeader>
             <TableRow className="table-header">
-              <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Phone</TableHead>
-              <TableHead>Passport</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Date Added</TableHead>
-              <TableHead>Actions</TableHead>
+              <TableHead>{t('customerId')}</TableHead>
+              <TableHead>{t('name')}</TableHead>
+              <TableHead>{t('email')}</TableHead>
+              <TableHead>{t('phone')}</TableHead>
+              <TableHead>{t('passport')}</TableHead>
+              {userRole === 'admin' && (
+                <TableHead>{t('type')}</TableHead>
+              )}
+              <TableHead>{t('dateAdded')}</TableHead>
+              {userRole === 'admin' && (
+                <TableHead>{t('branch')}</TableHead>
+              )}
+              <TableHead>{t('actions')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredCustomers.map(customer => (
               <TableRow key={customer.id} className="hover:bg-muted/50">
+                <TableCell className="font-mono text-xs">{customer.id.substring(0, 8)}</TableCell>
                 <TableCell className="font-medium">{customer.name}</TableCell>
                 <TableCell>{customer.email}</TableCell>
                 <TableCell>{customer.phone}</TableCell>
                 <TableCell>{customer.passport}</TableCell>
-                <TableCell>
-                  <Badge className={customer.type === 'new' ? "bg-blue-100 text-blue-800" : "bg-green-100 text-green-800"}>
-                    {customer.type}
-                  </Badge>
-                </TableCell>
+                {userRole === 'admin' && (
+                  <TableCell>
+                    <Badge className={customer.type === 'new' ? "bg-blue-100 text-blue-800" : "bg-green-100 text-green-800"}>
+                      {t(customer.type)}
+                    </Badge>
+                  </TableCell>
+                )}
                 <TableCell>{format(new Date(customer.dateAdded), 'MMM dd, yyyy')}</TableCell>
+                {userRole === 'admin' && (
+                  <TableCell>{customer.branchId}</TableCell>
+                )}
                 <TableCell>
                   <Button 
                     variant="outline" 
@@ -164,8 +182,8 @@ const CustomerTable = ({ branchId }: CustomerTableProps) => {
             ))}
             {filteredCustomers.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} className="h-24 text-center">
-                  No customers found.
+                <TableCell colSpan={userRole === 'admin' ? 9 : 7} className="h-24 text-center">
+                  {t('noCustomersFound')}
                 </TableCell>
               </TableRow>
             )}

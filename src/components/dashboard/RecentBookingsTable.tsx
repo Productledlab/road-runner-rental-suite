@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Booking } from "@/lib/types";
 import { format } from "date-fns";
 import { getBookings, getCustomers, getVehicles } from '@/lib/storage-service';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const getBadgeColorForStatus = (status: string) => {
   switch (status) {
@@ -30,6 +31,7 @@ const RecentBookingsTable = ({ branchId }: RecentBookingsTableProps) => {
   const [recentBookings, setRecentBookings] = useState<Booking[]>([]);
   const [customers, setCustomers] = useState([]);
   const [vehicles, setVehicles] = useState([]);
+  const { t } = useLanguage();
   
   useEffect(() => {
     // Get most recent 5 bookings from local storage for the selected branch
@@ -46,18 +48,19 @@ const RecentBookingsTable = ({ branchId }: RecentBookingsTableProps) => {
   return (
     <Card className="col-span-2">
       <CardHeader>
-        <CardTitle className="text-lg font-medium">Recent Bookings</CardTitle>
+        <CardTitle className="text-lg font-medium">{t('recentBookings')}</CardTitle>
       </CardHeader>
       <CardContent>
         <Table>
           <TableHeader>
             <TableRow className="table-header">
-              <TableHead>Customer</TableHead>
-              <TableHead>Vehicle</TableHead>
-              <TableHead>Start Date</TableHead>
-              <TableHead>End Date</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Price</TableHead>
+              <TableHead>{t('bookingId')}</TableHead>
+              <TableHead>{t('customer')}</TableHead>
+              <TableHead>{t('vehicle')}</TableHead>
+              <TableHead>{t('startDate')}</TableHead>
+              <TableHead>{t('endDate')}</TableHead>
+              <TableHead>{t('status')}</TableHead>
+              <TableHead className="text-right">{t('totalPrice')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -67,22 +70,23 @@ const RecentBookingsTable = ({ branchId }: RecentBookingsTableProps) => {
               
               return (
                 <TableRow key={booking.id}>
+                  <TableCell className="font-mono text-xs">{booking.id.substring(0, 8)}</TableCell>
                   <TableCell className="font-medium">{customer?.name || 'Unknown'}</TableCell>
                   <TableCell>{vehicle ? `${vehicle.make} ${vehicle.model}` : 'Unknown'}</TableCell>
                   <TableCell>{format(new Date(booking.startDate), 'MMM dd, yyyy')}</TableCell>
                   <TableCell>{format(new Date(booking.endDate), 'MMM dd, yyyy')}</TableCell>
                   <TableCell>
                     <Badge className={getBadgeColorForStatus(booking.status)}>
-                      {booking.status}
+                      {t(booking.status)}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-right">{booking.totalPrice} OMR</TableCell>
+                  <TableCell className="text-right">{booking.totalPrice} {t('currency')}</TableCell>
                 </TableRow>
               );
             })}
             {recentBookings.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} className="h-12 text-center">No bookings found</TableCell>
+                <TableCell colSpan={7} className="h-12 text-center">{t('noBookingsFound')}</TableCell>
               </TableRow>
             )}
           </TableBody>

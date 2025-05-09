@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import StatCard from '@/components/dashboard/StatCard';
 import StatusChart from '@/components/dashboard/StatusChart';
@@ -8,13 +9,13 @@ import BranchSelector from '@/components/layout/BranchSelector';
 import { 
   CarFront, 
   CalendarDays,
-  Users,
   DollarSign
 } from 'lucide-react';
 import { getVehicles, getBookings, getCustomers, getActiveBookings, getDashboardStats } from '@/lib/storage-service';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const Dashboard = () => {
   const [vehicles, setVehicles] = useState([]);
@@ -28,6 +29,7 @@ const Dashboard = () => {
     totalRevenue: 0,
     customers: 0
   });
+  const { t } = useLanguage();
   
   useEffect(() => {
     // Load data from local storage
@@ -53,11 +55,11 @@ const Dashboard = () => {
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Customer</TableHead>
-          <TableHead>Vehicle</TableHead>
-          <TableHead>Start Date</TableHead>
-          <TableHead>End Date</TableHead>
-          <TableHead>Branch</TableHead>
+          <TableHead>{t('customer')}</TableHead>
+          <TableHead>{t('vehicle')}</TableHead>
+          <TableHead>{t('startDate')}</TableHead>
+          <TableHead>{t('endDate')}</TableHead>
+          <TableHead>{t('branch')}</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -77,7 +79,7 @@ const Dashboard = () => {
         })}
         {activeBookingsList.length === 0 && (
           <TableRow>
-            <TableCell colSpan={5} className="text-center">No active bookings</TableCell>
+            <TableCell colSpan={5} className="text-center">{t('noBookingsFound')}</TableCell>
           </TableRow>
         )}
       </TableBody>
@@ -90,10 +92,10 @@ const Dashboard = () => {
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Vehicle</TableHead>
-          <TableHead>Car Number</TableHead>
-          <TableHead>Type</TableHead>
-          <TableHead>Price/Day</TableHead>
+          <TableHead>{t('vehicle')}</TableHead>
+          <TableHead>{t('carNumber')}</TableHead>
+          <TableHead>{t('type')}</TableHead>
+          <TableHead>{t('pricePerDay')}</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -101,13 +103,13 @@ const Dashboard = () => {
           <TableRow key={vehicle.id}>
             <TableCell className="font-medium">{vehicle.make} {vehicle.model}</TableCell>
             <TableCell>{vehicle.carNumber}</TableCell>
-            <TableCell>{vehicle.type}</TableCell>
-            <TableCell>{vehicle.pricePerDay} OMR</TableCell>
+            <TableCell>{t(vehicle.type)}</TableCell>
+            <TableCell>{vehicle.pricePerDay} {t('currency')}</TableCell>
           </TableRow>
         ))}
         {availableVehiclesList.length === 0 && (
           <TableRow>
-            <TableCell colSpan={4} className="text-center">No available vehicles</TableCell>
+            <TableCell colSpan={4} className="text-center">{t('noVehiclesFound')}</TableCell>
           </TableRow>
         )}
       </TableBody>
@@ -119,11 +121,11 @@ const Dashboard = () => {
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Name</TableHead>
-          <TableHead>Email</TableHead>
-          <TableHead>Phone</TableHead>
-          <TableHead>Type</TableHead>
-          <TableHead>Branch</TableHead>
+          <TableHead>{t('name')}</TableHead>
+          <TableHead>{t('email')}</TableHead>
+          <TableHead>{t('phone')}</TableHead>
+          <TableHead>{t('type')}</TableHead>
+          <TableHead>{t('branch')}</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -134,7 +136,7 @@ const Dashboard = () => {
             <TableCell>{customer.phone}</TableCell>
             <TableCell>
               <Badge className={customer.type === 'new' ? "bg-blue-100 text-blue-800" : "bg-green-100 text-green-800"}>
-                {customer.type}
+                {t(customer.type)}
               </Badge>
             </TableCell>
             <TableCell>{customer.branchId}</TableCell>
@@ -149,7 +151,7 @@ const Dashboard = () => {
         )}
         {customers.length === 0 && (
           <TableRow>
-            <TableCell colSpan={5} className="text-center">No customers</TableCell>
+            <TableCell colSpan={5} className="text-center">{t('noCustomersFound')}</TableCell>
           </TableRow>
         )}
       </TableBody>
@@ -162,11 +164,11 @@ const Dashboard = () => {
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Booking ID</TableHead>
-          <TableHead>Customer</TableHead>
-          <TableHead>Vehicle</TableHead>
-          <TableHead>Amount</TableHead>
-          <TableHead>Branch</TableHead>
+          <TableHead>{t('bookingId')}</TableHead>
+          <TableHead>{t('customer')}</TableHead>
+          <TableHead>{t('vehicle')}</TableHead>
+          <TableHead>{t('totalPrice')}</TableHead>
+          <TableHead>{t('branch')}</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -176,10 +178,10 @@ const Dashboard = () => {
           
           return (
             <TableRow key={booking.id}>
-              <TableCell className="font-mono text-sm">{booking.id}</TableCell>
+              <TableCell className="font-mono text-sm">{booking.id.substring(0, 8)}</TableCell>
               <TableCell>{customer?.name || 'Unknown'}</TableCell>
               <TableCell>{vehicle ? `${vehicle.make} ${vehicle.model}` : 'Unknown'}</TableCell>
-              <TableCell>{booking.totalPrice} OMR</TableCell>
+              <TableCell>{booking.totalPrice} {t('currency')}</TableCell>
               <TableCell>{booking.branchId}</TableCell>
             </TableRow>
           );
@@ -193,7 +195,7 @@ const Dashboard = () => {
         )}
         {completedBookings.length === 0 && (
           <TableRow>
-            <TableCell colSpan={5} className="text-center">No completed bookings</TableCell>
+            <TableCell colSpan={5} className="text-center">{t('noBookingsFound')}</TableCell>
           </TableRow>
         )}
       </TableBody>
@@ -204,13 +206,13 @@ const Dashboard = () => {
     <AppLayout>
       <div className="space-y-6">
         <div className="flex justify-between items-center">
-          <h1 className="page-title">Dashboard</h1>
+          <h1 className="page-title">{t('dashboard')}</h1>
           <BranchSelector showAllOption={true} onChange={handleBranchChange} />
         </div>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard 
-            title="Total Active Vehicles"
+            title={t('totalActiveVehicles')}
             value={stats.totalVehicles}
             icon={<CarFront className="h-5 w-5" />}
             trend={{ value: 12, isPositive: true }}
@@ -218,7 +220,7 @@ const Dashboard = () => {
           />
           
           <StatCard 
-            title="Available Vehicles"
+            title={t('availableVehicles')}
             value={stats.availableVehicles}
             icon={<CarFront className="h-5 w-5" />}
             color="green"
@@ -226,7 +228,7 @@ const Dashboard = () => {
           />
           
           <StatCard 
-            title="Active Bookings"
+            title={t('activeBookings')}
             value={stats.activeBookings}
             icon={<CalendarDays className="h-5 w-5" />}
             color="amber"
@@ -234,8 +236,8 @@ const Dashboard = () => {
           />
           
           <StatCard 
-            title="Total Revenue"
-            value={`${stats.totalRevenue} OMR`}
+            title={t('totalRevenue')}
+            value={`${stats.totalRevenue} ${t('currency')}`}
             icon={<DollarSign className="h-5 w-5" />}
             trend={{ value: 8, isPositive: true }}
             color="purple"
