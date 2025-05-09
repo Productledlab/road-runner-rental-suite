@@ -1,6 +1,7 @@
-
 import { ReactNode, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { jwtDecode } from 'jwt-decode';
+
 
 interface AuthGuardProps {
   children: ReactNode;
@@ -15,25 +16,36 @@ const AuthGuard = ({ children, allowedRoles, redirectTo = '/' }: AuthGuardProps)
 
   useEffect(() => {
     const checkAuth = () => {
-      const userString = localStorage.getItem('user');
-      
-      if (!userString) {
+      const token = localStorage.getItem('token');
+
+      if (!token) {
         navigate(redirectTo);
         return;
       }
-      
+
       try {
-        const user = JSON.parse(userString);
-        if (user && allowedRoles.includes(user.role)) {
-          setAuthorized(true);
-          
-          // If user is a branch manager, ensure they have a current branch set
-          if (user.role === 'branch-manager' && user.branchAccess) {
-            // Set the current branch to their assigned branch if it's not already set
-            localStorage.setItem('currentBranch', user.branchAccess);
+        if (token) {
+          const decoded = jwtDecode(token);
+          const { user } = decoded;
+
+          if (decoded.exp * 1000 < Date.now()) {
+            localStorage.clear();
+            navigate('/login');
           }
-        } else {
-          navigate(redirectTo);
+
+          if (user && allowedRoles.includes(user.role)) {
+            setAuthorized(true);
+
+            if (user.role === 'branch_admin' && user.branchId) {
+              localStorage.setItem('currentBranch', user.branchId);
+            }
+
+            if (user.role === 'company_admin' && user.companyId) {
+              localStorage.setItem('currentCompany', user.companyId);
+            }
+          } else {
+            navigate(redirectTo);
+          }
         }
       } catch (e) {
         navigate(redirectTo);

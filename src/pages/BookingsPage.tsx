@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import AppLayout from "@/components/layout/AppLayout";
 import BookingTable from "@/components/bookings/BookingTable";
 import BranchSelector from "@/components/layout/BranchSelector";
+import { jwtDecode } from 'jwt-decode';
 
 const BookingsPage = () => {
   const [selectedBranch, setSelectedBranch] = useState<string | null>(null);
@@ -10,12 +11,15 @@ const BookingsPage = () => {
 
   useEffect(() => {
     // Get user information
-    const userString = localStorage.getItem('user');
-    if (userString) {
+    const token = localStorage.getItem('token');
+    const decoded = jwtDecode(token);
+    const { user } = decoded;
+
+    if (user) {
       try {
-        const user = JSON.parse(userString);
+        const user = JSON.parse(user);
         setUserRole(user.role);
-        
+
         // If branch manager, use their assigned branch
         if (user.role === 'branch-manager' && user.branchAccess) {
           setSelectedBranch(user.branchAccess);
@@ -37,7 +41,7 @@ const BookingsPage = () => {
           <h1 className="page-title">Bookings</h1>
           <BranchSelector onChange={handleBranchChange} />
         </div>
-        
+
         <BookingTable branchId={selectedBranch === 'all' ? undefined : selectedBranch || undefined} />
       </div>
     </AppLayout>

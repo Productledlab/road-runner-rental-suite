@@ -9,6 +9,7 @@ import { Vehicle } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { saveVehicle } from "@/lib/storage-service";
 import BranchSelector from "@/components/layout/BranchSelector";
+import { jwtDecode } from "jwt-decode";
 
 const VehiclesPage = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -17,13 +18,15 @@ const VehiclesPage = () => {
   const [userRole, setUserRole] = useState<string | null>(null);
 
   useEffect(() => {
-    // Get user information
-    const userString = localStorage.getItem('user');
-    if (userString) {
+    const token = localStorage.getItem('token');
+    const decoded = jwtDecode(token);
+    const { user } = decoded;
+
+    if (user) {
       try {
-        const user = JSON.parse(userString);
+        const user = JSON.parse(user);
         setUserRole(user.role);
-        
+
         // If branch manager, use their assigned branch
         if (user.role === 'branch-manager' && user.branchAccess) {
           setSelectedBranch(user.branchAccess);
@@ -37,13 +40,13 @@ const VehiclesPage = () => {
   const handleAddVehicle = (vehicle: Vehicle) => {
     // Save to local storage
     saveVehicle(vehicle);
-    
+
     toast({
       title: "Vehicle added",
       description: `${vehicle.make} ${vehicle.model} has been added successfully.`,
     });
     setIsDialogOpen(false);
-    
+
     // No need to reload the page anymore
     setTimeout(() => {
       window.location.reload();
@@ -61,7 +64,7 @@ const VehiclesPage = () => {
           <h1 className="page-title">Vehicles</h1>
           <div className="flex items-center gap-4">
             <BranchSelector onChange={handleBranchChange} />
-            <Button 
+            <Button
               onClick={() => setIsDialogOpen(true)}
               className="bg-rental-600 hover:bg-rental-700 text-white"
             >
@@ -69,13 +72,13 @@ const VehiclesPage = () => {
             </Button>
           </div>
         </div>
-        
+
         <VehicleTable branchId={selectedBranch === 'all' ? undefined : selectedBranch || undefined} />
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-lg">
-          <VehicleForm 
+          <VehicleForm
             initialData={null}
             onSubmit={handleAddVehicle}
             onCancel={() => setIsDialogOpen(false)}

@@ -1,12 +1,15 @@
 
-export type UserRole = 'admin' | 'customer' | 'staff' | 'branch-manager';
+export type UserRole = 'super_admin' | 'company_admin' | 'staff' | 'branch_admin';
 
 export interface User {
   id: string;
   name: string;
   email: string;
   role: UserRole;
-  branchId?: string; // Branch ID for branch-specific users
+  companyId?: string;
+  branchId?: string;
+  company_id?: string;
+  branch_id?: string;
 }
 
 export type VehicleStatus = 'available' | 'booked' | 'maintenance' | 'archived';
@@ -31,11 +34,15 @@ export interface Vehicle {
   lastUpdatedBy?: string; // Branch that last updated the vehicle
 }
 
+export type BranchType = 'active' | 'closed' | 'suspended';
+
 export interface Branch {
   id: string;
   name: string;
   location: string;
-  managerId?: string;
+  dateAdded: string;
+  company_id: string;
+  status: BranchType;
 }
 
 export type CustomerType = 'new' | 'returning';
@@ -51,6 +58,16 @@ export interface Customer {
   dateAdded: string;
   branchId: string; // Which branch added this customer
   type: CustomerType; // New or returning customer
+}
+
+export interface Company {
+  id: string;
+  name: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+  dateAdded: string;
+  status: "active" | "suspended";
 }
 
 export type BookingStatus = 'pending' | 'ongoing' | 'completed' | 'cancelled';
