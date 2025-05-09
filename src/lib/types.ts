@@ -53,7 +53,7 @@ export interface Customer {
   type: CustomerType; // New or returning customer
 }
 
-export type BookingStatus = 'pending' | 'ongoing' | 'completed' | 'cancelled';
+export type BookingStatus = 'pending' | 'ongoing' | 'completed' | 'cancelled' | 'archived';
 
 export interface Booking {
   id: string;

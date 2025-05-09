@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Customer, CustomerType } from '@/lib/types';
 import { Edit } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import CustomerForm from './CustomerForm';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { format } from 'date-fns';
