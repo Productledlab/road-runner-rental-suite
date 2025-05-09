@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Vehicle, VehicleStatus, FuelType, VehicleType } from '@/lib/types';
 import { Button } from '@/components/ui/button';
@@ -22,6 +21,7 @@ interface VehicleFormProps {
   initialData: Vehicle | null;
   onSubmit: (vehicle: Vehicle) => void;
   onCancel: () => void;
+  userRole?: string;
 }
 
 const defaultVehicle: Vehicle = {
@@ -39,7 +39,7 @@ const defaultVehicle: Vehicle = {
   images: []
 };
 
-const VehicleForm = ({ initialData, onSubmit, onCancel }: VehicleFormProps) => {
+const VehicleForm = ({ initialData, onSubmit, onCancel, userRole }: VehicleFormProps) => {
   const [formData, setFormData] = useState<Vehicle>(initialData || defaultVehicle);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [makes, setMakes] = useState<string[]>([]);

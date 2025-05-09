@@ -1,8 +1,10 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 interface LanguageContextProps {
   language: string;
   setLanguage: (language: string) => void;
+  toggleLanguage: () => void;
   t: (key: string) => string;
 }
 
@@ -19,6 +21,10 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
     localStorage.setItem('language', language);
   }, [language]);
 
+  const toggleLanguage = () => {
+    setLanguage(prevLang => prevLang === 'en' ? 'ar' : 'en');
+  };
+
   const translations = {
     en: {
       dashboard: 'Dashboard',
@@ -26,6 +32,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
       bookings: 'Bookings',
       customers: 'Customers',
       settings: 'Settings',
+      archivedVehicles: 'Archived Vehicles',
       logout: 'Logout',
       language: 'Language',
       branch: 'Branch',
@@ -119,11 +126,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
       email: 'Email',
       phone: 'Phone',
       passport: 'Passport',
-      type: 'Type',
       dateAdded: 'Date Added',
-      branch: 'Branch',
-      actions: 'Actions',
-      searchCustomerName: 'Search Customer Name',
       bookingId: 'Booking ID',
       clearFilters: 'Clear Filters',
       newBooking: 'New Booking',
@@ -144,7 +147,6 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
       updateCustomer: 'Update Customer',
       customerUpdatedSuccess: 'Customer information has been updated successfully',
       customerAddedSuccess: 'A new customer has been added successfully',
-      archivedVehicles: 'Archived Vehicles',
       archivedVehiclesDesc: 'View archived vehicles',
       restore: 'Restore',
       accessDenied: 'Access Denied',
@@ -158,7 +160,18 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
       customerExists: 'Customer Exists',
       updatingExistingCustomer: 'Existing customer information will be updated',
       totalBookings: 'Total Bookings',
-      completedBookings: 'Completed Bookings'
+      completedBookings: 'Completed Bookings',
+      loggedInAs: 'Logged in as',
+      adminUser: 'Admin User',
+      general: 'General',
+      specifications: 'Specifications',
+      images: 'Images',
+      enterNewMake: 'Enter new make',
+      enterNewModel: 'Enter new model',
+      add: 'Add',
+      noImage: 'No Image',
+      view: 'View',
+      edit: 'Edit'
     },
     ar: {
       dashboard: 'لوحة القيادة',
@@ -166,6 +179,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
       bookings: 'الحجوزات',
       customers: 'العملاء',
       settings: 'الإعدادات',
+      archivedVehicles: 'المركبات المؤرشفة',
       logout: 'تسجيل الخروج',
       language: 'اللغة',
       branch: 'الفرع',
@@ -251,7 +265,6 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
       currency: 'ر.ع',
       addNewVehicle: 'إضافة مركبة جديدة',
       editVehicle: 'تحرير المركبة',
-      vehicleDetails: 'تفاصيل المركبة',
       make: 'الصنع',
       model: 'الموديل',
       save: 'حفظ',
@@ -260,12 +273,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
       email: 'البريد الإلكتروني',
       phone: 'الهاتف',
       passport: 'جواز السفر',
-      type: 'النوع',
       dateAdded: 'تاريخ الإضافة',
-      branch: 'الفرع',
-      actions: 'الإجراءات',
-      addNewCustomer: 'إضافة عميل جديد',
-      searchCustomerName: 'البحث عن اسم العميل',
       bookingId: 'معرف الحجز',
       clearFilters: 'مسح الفلاتر',
       newBooking: 'حجز جديد',
@@ -286,7 +294,6 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
       updateCustomer: 'تم تحديث العميل',
       customerUpdatedSuccess: 'تم تحديث معلومات العميل بنجاح',
       customerAddedSuccess: 'تمت إضافة عميل جديد بنجاح',
-      archivedVehicles: 'المركبات المؤرشفة',
       archivedVehiclesDesc: 'عرض المركبات المؤرشفة',
       restore: 'استعادة',
       accessDenied: 'تم رفض الوصول',
@@ -300,7 +307,18 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
       customerExists: 'العميل موجود',
       updatingExistingCustomer: 'سيتم تحديث معلومات العميل الموجود',
       totalBookings: 'إجمالي الحجوزات',
-      completedBookings: 'الحجوزات المكتملة'
+      completedBookings: 'الحجوزات المكتملة',
+      loggedInAs: 'تم تسجيل الدخول باسم',
+      adminUser: 'المستخدم المسؤول',
+      general: 'عام',
+      specifications: 'المواصفات',
+      images: 'الصور',
+      enterNewMake: 'أدخل صانع جديد',
+      enterNewModel: 'أدخل موديل جديد',
+      add: 'إضافة',
+      noImage: 'لا توجد صورة',
+      view: 'عرض',
+      edit: 'تحرير'
     }
   };
 
@@ -311,6 +329,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
   const value: LanguageContextProps = {
     language,
     setLanguage,
+    toggleLanguage,
     t,
   };
 
