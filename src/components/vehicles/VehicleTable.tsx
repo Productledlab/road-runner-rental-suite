@@ -41,10 +41,18 @@ const VehicleTable = ({ branchId }: VehicleTableProps) => {
   const [viewingVehicle, setViewingVehicle] = useState<Vehicle | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [userRole, setUserRole] = useState<string>('');
   const { toast } = useToast();
   const { t } = useLanguage();
   
   useEffect(() => {
+    // Get user role
+    const userString = localStorage.getItem('user');
+    if (userString) {
+      const user = JSON.parse(userString);
+      setUserRole(user.role || '');
+    }
+    
     // Load vehicles from local storage
     const loadedVehicles = getVehicles();
     setVehicles(loadedVehicles);
@@ -90,6 +98,16 @@ const VehicleTable = ({ branchId }: VehicleTableProps) => {
   };
 
   const handleArchive = (vehicleId: string) => {
+    // Only admin can archive vehicles
+    if (userRole !== 'admin') {
+      toast({
+        title: t('accessDenied'),
+        description: t('onlyAdminCanArchiveVehicles'),
+        variant: 'destructive'
+      });
+      return;
+    }
+
     archiveVehicle(vehicleId);
     
     // Update local state
@@ -110,6 +128,16 @@ const VehicleTable = ({ branchId }: VehicleTableProps) => {
   };
 
   const handleEdit = (vehicle: Vehicle) => {
+    // Only admin can edit vehicles
+    if (userRole !== 'admin') {
+      toast({
+        title: t('accessDenied'),
+        description: t('onlyAdminCanEditVehicles'),
+        variant: 'destructive'
+      });
+      return;
+    }
+
     setEditingVehicle(vehicle);
     setIsDialogOpen(true);
   };
@@ -120,6 +148,16 @@ const VehicleTable = ({ branchId }: VehicleTableProps) => {
   };
 
   const handleVehicleUpdate = (updatedVehicle: Vehicle) => {
+    // Additional check to ensure only admin can save vehicle changes
+    if (userRole !== 'admin') {
+      toast({
+        title: t('accessDenied'),
+        description: t('onlyAdminCanManageVehicles'),
+        variant: 'destructive'
+      });
+      return;
+    }
+
     // Save to local storage
     saveVehicle(updatedVehicle);
     
@@ -140,6 +178,9 @@ const VehicleTable = ({ branchId }: VehicleTableProps) => {
 
   const statusOptions: VehicleStatus[] = ['available', 'booked', 'maintenance'];
   const typeOptions: VehicleType[] = ['sedan', 'suv', 'hatchback', 'luxury', 'van'];
+
+  // Determine if current user can edit vehicle data
+  const canManageVehicles = userRole === 'admin';
 
   return (
     <div>
@@ -240,20 +281,24 @@ const VehicleTable = ({ branchId }: VehicleTableProps) => {
                     >
                       <Eye className="h-4 w-4" />
                     </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => handleEdit(vehicle)}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => handleArchive(vehicle.id)}
-                    >
-                      <Archive className="h-4 w-4" />
-                    </Button>
+                    {canManageVehicles && (
+                      <>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleEdit(vehicle)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleArchive(vehicle.id)}
+                        >
+                          <Archive className="h-4 w-4" />
+                        </Button>
+                      </>
+                    )}
                   </div>
                 </TableCell>
               </TableRow>
@@ -275,6 +320,7 @@ const VehicleTable = ({ branchId }: VehicleTableProps) => {
             initialData={editingVehicle}
             onSubmit={handleVehicleUpdate}
             onCancel={() => setIsDialogOpen(false)}
+            userRole={userRole}
           />
         </DialogContent>
       </Dialog>

@@ -1,9 +1,8 @@
-
 import { useState, useEffect } from 'react';
 import { Booking, BookingStatus, Customer } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { DialogTitle, DialogHeader, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -12,11 +11,13 @@ import { format } from 'date-fns';
 import { getCurrentBranch, getCustomers, getVehicles, getAvailableVehicles, saveCustomer, saveVehicle } from '@/lib/storage-service';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useToast } from '@/hooks/use-toast';
 
 // Create a simplified version of CustomerForm that doesn't use <form> elements
 // to avoid nested forms
 const CustomerFormSimple = ({ onSubmit }: { onSubmit: (customer: Customer) => void }) => {
   const { t } = useLanguage();
+  const { toast } = useToast();
   const [formData, setFormData] = useState<Customer>({
     id: Math.random().toString(36).substr(2, 9),
     name: '',
@@ -31,6 +32,30 @@ const CustomerFormSimple = ({ onSubmit }: { onSubmit: (customer: Customer) => vo
   });
   
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    // Check if customer with passport already exists
+    const customers = getCustomers();
+    if (formData.passport) {
+      const existingCustomer = customers.find(c => 
+        c.passport.toLowerCase() === formData.passport.toLowerCase()
+      );
+      
+      if (existingCustomer) {
+        toast({
+          title: t('customerExists'),
+          description: t('updatingExistingCustomer'),
+        });
+        
+        // Pre-fill form with existing customer data
+        setFormData({
+          ...existingCustomer,
+          // Keep the entered passport but update other fields
+          passport: formData.passport
+        });
+      }
+    }
+  }, [formData.passport, t, toast]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -173,6 +198,8 @@ interface BookingFormProps {
   initialData: Booking | null;
   onSubmit: (booking: Booking) => void;
   onCancel: () => void;
+  isCompleting?: boolean;
+  userRole?: string;
 }
 
 const defaultBooking: Booking = {
@@ -182,14 +209,14 @@ const defaultBooking: Booking = {
   startDate: '',
   endDate: '',
   totalPrice: 0,
-  status: 'pending',
+  status: 'ongoing',
   createdAt: '',
   updatedAt: '',
   branchId: '',
   startKm: 0,
 };
 
-const BookingForm = ({ initialData, onSubmit, onCancel }: BookingFormProps) => {
+const BookingForm = ({ initialData, onSubmit, onCancel, isCompleting = false, userRole = '' }: BookingFormProps) => {
   const [formData, setFormData] = useState<Booking>(initialData || defaultBooking);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [startDate, setStartDate] = useState<Date | undefined>(
@@ -200,22 +227,16 @@ const BookingForm = ({ initialData, onSubmit, onCancel }: BookingFormProps) => {
   );
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [availableVehicles, setAvailableVehicles] = useState<any[]>([]);
-  const [isCompletingBooking, setIsCompletingBooking] = useState(false);
   const [kmDriven, setKmDriven] = useState<number | undefined>(undefined);
   const [showCustomerForm, setShowCustomerForm] = useState(false);
-  const [userRole, setUserRole] = useState<string>('');
   const { t } = useLanguage();
+  const { toast } = useToast();
   
   useEffect(() => {
-    // Get user role
-    const user = JSON.parse(localStorage.getItem('user') || '{"role": ""}');
-    setUserRole(user.role || '');
-
     if (initialData) {
       setFormData(initialData);
       setStartDate(new Date(initialData.startDate));
       setEndDate(new Date(initialData.endDate));
-      setIsCompletingBooking(initialData.status === 'ongoing');
       
       // Load available vehicles for the date range
       const vehicles = getAvailableVehicles(
@@ -234,6 +255,7 @@ const BookingForm = ({ initialData, onSubmit, onCancel }: BookingFormProps) => {
         createdAt: now.toISOString(),
         updatedAt: now.toISOString(),
         branchId,
+        status: 'ongoing',
       });
     }
     
@@ -271,6 +293,12 @@ const BookingForm = ({ initialData, onSubmit, onCancel }: BookingFormProps) => {
       const endKm = Number(value);
       if (endKm >= startKm) {
         setKmDriven(endKm - startKm);
+        
+        // Also update formData.kmDriven
+        setFormData(prev => ({
+          ...prev,
+          kmDriven: endKm - startKm
+        }));
       } else {
         setKmDriven(undefined);
       }
@@ -278,6 +306,9 @@ const BookingForm = ({ initialData, onSubmit, onCancel }: BookingFormProps) => {
   };
 
   const handleStartDateChange = (date?: Date) => {
+    // Only allow changing dates if not completing a booking
+    if (isCompleting) return;
+    
     if (date) {
       setStartDate(date);
       const formattedDate = date.toISOString();
@@ -295,6 +326,9 @@ const BookingForm = ({ initialData, onSubmit, onCancel }: BookingFormProps) => {
   };
 
   const handleEndDateChange = (date?: Date) => {
+    // Only allow changing dates if not completing a booking
+    if (isCompleting) return;
+    
     if (date) {
       setEndDate(date);
       const formattedDate = date.toISOString();
@@ -312,23 +346,52 @@ const BookingForm = ({ initialData, onSubmit, onCancel }: BookingFormProps) => {
   };
 
   const handleAddNewCustomer = (customer: Customer) => {
-    // Set branch ID
-    const branchId = getCurrentBranch();
-    const newCustomer = {
-      ...customer,
-      branchId
-    };
+    // Check if customer with same passport already exists
+    const customers = getCustomers();
+    const existingCustomer = customers.find(c => 
+      c.passport.toLowerCase() === customer.passport.toLowerCase()
+    );
+    
+    let savedCustomer;
+    
+    if (existingCustomer) {
+      // Update existing customer with new details
+      savedCustomer = {
+        ...existingCustomer,
+        name: customer.name,
+        email: customer.email,
+        phone: customer.phone,
+        visa: customer.visa,
+        address: customer.address,
+        type: 'returning' as const // Mark as returning customer
+      };
+      
+      toast({
+        title: t('customerUpdated'),
+        description: t('existingCustomerUpdated')
+      });
+    } else {
+      // Set branch ID for new customer
+      savedCustomer = {
+        ...customer,
+        branchId: getCurrentBranch()
+      };
+    }
     
     // Save customer
-    const savedCustomer = saveCustomer(newCustomer);
+    const result = saveCustomer(savedCustomer);
     
     // Update customers list
-    setCustomers(prev => [...prev, savedCustomer]);
+    setCustomers(prev => {
+      // Remove existing customer with same ID if present
+      const filtered = prev.filter(c => c.id !== result.id);
+      return [...filtered, result];
+    });
     
-    // Select the new customer in the form
+    // Select the customer in the form
     setFormData(prev => ({
       ...prev,
-      customerId: savedCustomer.id
+      customerId: result.id
     }));
 
     // Hide the customer form
@@ -345,15 +408,15 @@ const BookingForm = ({ initialData, onSubmit, onCancel }: BookingFormProps) => {
     else if (new Date(formData.startDate) > new Date(formData.endDate)) {
       newErrors.endDate = 'End date must be after start date';
     }
-    if (!formData.status) newErrors.status = 'Please select a status';
-    if (formData.totalPrice <= 0) newErrors.totalPrice = 'Price must be greater than 0';
     
-    if (isCompletingBooking && !formData.endKm) {
-      newErrors.endKm = 'Return km reading is required to complete the booking';
-    }
-    
-    if (isCompletingBooking && formData.endKm && formData.startKm && formData.endKm < formData.startKm) {
-      newErrors.endKm = 'Return km reading must be greater than start km reading';
+    if (isCompleting) {
+      if (!formData.endKm) {
+        newErrors.endKm = 'Return km reading is required to complete the booking';
+      }
+      
+      if (formData.endKm && formData.startKm && formData.endKm < formData.startKm) {
+        newErrors.endKm = 'Return km reading must be greater than start km reading';
+      }
     }
     
     setErrors(newErrors);
@@ -370,13 +433,25 @@ const BookingForm = ({ initialData, onSubmit, onCancel }: BookingFormProps) => {
         updatedAt: new Date().toISOString()
       };
       
-      // If completing the booking, calculate km driven
-      if (isCompletingBooking && updatedBooking.endKm && updatedBooking.startKm) {
+      // If completing the booking, calculate km driven and set status
+      if (isCompleting && updatedBooking.endKm && updatedBooking.startKm) {
         updatedBooking = {
           ...updatedBooking,
           kmDriven: updatedBooking.endKm - updatedBooking.startKm,
           status: 'completed'
         };
+        
+        // Update the vehicle's current km reading
+        const vehicles = getVehicles();
+        const vehicle = vehicles.find(v => v.id === updatedBooking.vehicleId);
+        if (vehicle) {
+          const updatedVehicle = {
+            ...vehicle,
+            currentKm: updatedBooking.endKm,
+            status: 'available' as const
+          };
+          saveVehicle(updatedVehicle);
+        }
       }
 
       // If creating a new booking, update the vehicle status to booked
@@ -396,23 +471,20 @@ const BookingForm = ({ initialData, onSubmit, onCancel }: BookingFormProps) => {
     }
   };
 
-  // Only allow status change if admin, or if completing/canceling a booking
-  const statusOptions: BookingStatus[] = userRole === 'admin'
-    ? ['pending', 'ongoing', 'completed', 'cancelled', 'archived']
-    : (isCompletingBooking ? ['completed', 'cancelled'] : ['pending', 'ongoing']);
+  // Determine which fields are editable
+  const isCompletedBooking = initialData?.status === 'completed' && !isCompleting;
+  const isBranchUser = userRole !== 'admin';
+  
+  // If branch user is completing a booking, they can only edit price and end KM
+  const canOnlyEditPriceAndEndKm = isCompleting && isBranchUser;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <DialogHeader>
-        <DialogTitle>
-          {initialData ? (isCompletingBooking ? t('completeBooking') : t('editBooking')) : t('createNewBooking')}
-        </DialogTitle>
-        <DialogDescription>
-          {isCompletingBooking
-            ? t('enterReturnKm')
-            : (initialData ? t('updateBookingDetails') : t('enterBookingDetails'))}
-        </DialogDescription>
-      </DialogHeader>
+      <DialogDescription>
+        {isCompleting
+          ? t('enterReturnKm')
+          : (initialData ? t('updateBookingDetails') : t('enterBookingDetails'))}
+      </DialogDescription>
       
       <div className="grid grid-cols-2 gap-4">
         {/* Customer Selection */}
@@ -422,7 +494,7 @@ const BookingForm = ({ initialData, onSubmit, onCancel }: BookingFormProps) => {
             <Select 
               value={formData.customerId} 
               onValueChange={(value) => handleChange('customerId', value)}
-              disabled={isCompletingBooking}
+              disabled={isCompleting || isCompletedBooking}
             >
               <SelectTrigger>
                 <SelectValue placeholder={t('selectCustomer')} />
@@ -430,26 +502,27 @@ const BookingForm = ({ initialData, onSubmit, onCancel }: BookingFormProps) => {
               <SelectContent>
                 {customers.map(customer => (
                   <SelectItem key={customer.id} value={customer.id}>
-                    {customer.name}
+                    {customer.name} ({customer.passport})
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
             
-            <Button 
-              type="button" 
-              variant="outline"
-              onClick={() => setShowCustomerForm(!showCustomerForm)}
-              disabled={isCompletingBooking}
-            >
-              {showCustomerForm ? t('cancel') : t('addNewCustomer')}
-            </Button>
+            {!isCompletedBooking && !isCompleting && (
+              <Button 
+                type="button" 
+                variant="outline"
+                onClick={() => setShowCustomerForm(!showCustomerForm)}
+              >
+                {showCustomerForm ? t('cancel') : t('addNewCustomer')}
+              </Button>
+            )}
           </div>
           {errors.customerId && <p className="text-sm text-red-500">{errors.customerId}</p>}
         </div>
         
         {/* Add Customer Form (conditionally rendered) */}
-        {showCustomerForm && (
+        {showCustomerForm && !isCompletedBooking && !isCompleting && (
           <div className="col-span-2 border p-4 rounded-md max-h-80 overflow-y-auto">
             <CustomerFormSimple onSubmit={handleAddNewCustomer} />
           </div>
@@ -463,7 +536,7 @@ const BookingForm = ({ initialData, onSubmit, onCancel }: BookingFormProps) => {
               <Button
                 variant="outline"
                 className={`w-full justify-start text-left ${!startDate && 'text-muted-foreground'}`}
-                disabled={isCompletingBooking}
+                disabled={isCompleting || isCompletedBooking || canOnlyEditPriceAndEndKm}
                 type="button"
               >
                 {startDate ? format(startDate, 'PPP') : t('selectStartDate')}
@@ -490,7 +563,7 @@ const BookingForm = ({ initialData, onSubmit, onCancel }: BookingFormProps) => {
               <Button
                 variant="outline"
                 className={`w-full justify-start text-left ${!endDate && 'text-muted-foreground'}`}
-                disabled={isCompletingBooking}
+                disabled={isCompleting || isCompletedBooking || canOnlyEditPriceAndEndKm}
                 type="button"
               >
                 {endDate ? format(endDate, 'PPP') : t('selectEndDate')}
@@ -516,7 +589,7 @@ const BookingForm = ({ initialData, onSubmit, onCancel }: BookingFormProps) => {
           <Select 
             value={formData.vehicleId} 
             onValueChange={(value) => handleChange('vehicleId', value)}
-            disabled={isCompletingBooking || !startDate || !endDate}
+            disabled={isCompleting || isCompletedBooking || canOnlyEditPriceAndEndKm || !startDate || !endDate}
           >
             <SelectTrigger>
               <SelectValue placeholder={(!startDate || !endDate) ? t('selectDatesFirst') : t('selectVehicle')} />
@@ -547,13 +620,13 @@ const BookingForm = ({ initialData, onSubmit, onCancel }: BookingFormProps) => {
             value={formData.startKm || 0}
             onChange={(e) => handleChange('startKm', parseFloat(e.target.value))}
             placeholder="0"
-            disabled={isCompletingBooking}
+            disabled={isCompleting || isCompletedBooking || canOnlyEditPriceAndEndKm}
           />
           {errors.startKm && <p className="text-sm text-red-500">{errors.startKm}</p>}
         </div>
         
         {/* End KM (Only shown when completing a booking) */}
-        {isCompletingBooking && (
+        {(isCompleting || isCompletedBooking) && (
           <div className="space-y-2">
             <Label htmlFor="endKm">{t('returnKm')} *</Label>
             <Input
@@ -563,6 +636,7 @@ const BookingForm = ({ initialData, onSubmit, onCancel }: BookingFormProps) => {
               value={formData.endKm || 0}
               onChange={(e) => handleChange('endKm', parseFloat(e.target.value))}
               placeholder="0"
+              disabled={isCompletedBooking}
             />
             {errors.endKm && <p className="text-sm text-red-500">{errors.endKm}</p>}
           </div>
@@ -587,13 +661,16 @@ const BookingForm = ({ initialData, onSubmit, onCancel }: BookingFormProps) => {
           <Select 
             value={formData.status} 
             onValueChange={(value) => handleChange('status', value as BookingStatus)}
-            disabled={userRole !== 'admin' && !isCompletingBooking}
+            disabled={isCompleting || (userRole !== 'admin' && initialData?.status === 'completed')}
           >
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {statusOptions.map(status => (
+              {(userRole === 'admin' 
+                ? ['pending', 'ongoing', 'completed', 'cancelled', 'archived'] 
+                : (isCompleting ? ['completed'] : ['pending', 'ongoing', 'cancelled'])
+              ).map(status => (
                 <SelectItem key={status} value={status}>
                   {t(status)}
                 </SelectItem>
@@ -613,6 +690,8 @@ const BookingForm = ({ initialData, onSubmit, onCancel }: BookingFormProps) => {
             value={formData.totalPrice}
             onChange={(e) => handleChange('totalPrice', parseFloat(e.target.value))}
             placeholder="0"
+            // Always allow editing price when completing a booking
+            disabled={isCompletedBooking && !isCompleting}
           />
           {errors.totalPrice && <p className="text-sm text-red-500">{errors.totalPrice}</p>}
         </div>
@@ -623,7 +702,7 @@ const BookingForm = ({ initialData, onSubmit, onCancel }: BookingFormProps) => {
           {t('cancel')}
         </Button>
         <Button type="submit" className="bg-rental-600 hover:bg-rental-700 text-white">
-          {initialData ? (isCompletingBooking ? t('completeBooking') : t('update')) : t('createBooking')}
+          {initialData ? (isCompleting ? t('completeBooking') : t('update')) : t('createBooking')}
         </Button>
       </DialogFooter>
     </form>

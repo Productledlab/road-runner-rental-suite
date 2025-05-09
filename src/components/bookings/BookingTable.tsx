@@ -5,16 +5,17 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Booking, BookingStatus } from '@/lib/types';
-import { Archive, Edit } from 'lucide-react';
+import { Edit, Eye } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import BookingForm from './BookingForm';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { getBookings, getCustomers, getVehicles, saveBooking } from '@/lib/storage-service';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 interface BookingTableProps {
   branchId?: string;
@@ -45,7 +46,9 @@ const BookingTable = ({ branchId }: BookingTableProps) => {
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
+  const [completingBooking, setCompletingBooking] = useState<Booking | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
   const [userRole, setUserRole] = useState<string>('');
   const { toast } = useToast();
   const { t } = useLanguage();
@@ -124,7 +127,36 @@ const BookingTable = ({ branchId }: BookingTableProps) => {
   };
 
   const handleEdit = (booking: Booking) => {
+    // Check if booking is completed and user is not admin
+    if (booking.status === 'completed' && userRole !== 'admin') {
+      toast({
+        title: t('accessDenied'),
+        description: t('cannotEditCompletedBooking'),
+        variant: 'destructive'
+      });
+      return;
+    }
+    
     setEditingBooking(booking);
+    setIsDialogOpen(true);
+  };
+
+  const handleCompleteBooking = (booking: Booking) => {
+    setCompletingBooking(booking);
+    setIsConfirmDialogOpen(true);
+  };
+
+  const confirmCompleteBooking = () => {
+    if (!completingBooking) return;
+    
+    // Mark as completed and proceed to editing
+    const bookingToComplete = {
+      ...completingBooking,
+      status: 'completed' as BookingStatus
+    };
+    
+    setEditingBooking(bookingToComplete);
+    setIsConfirmDialogOpen(false);
     setIsDialogOpen(true);
   };
 
@@ -144,35 +176,6 @@ const BookingTable = ({ branchId }: BookingTableProps) => {
     toast({
       title: t('bookingUpdated'),
       description: t('bookingUpdatedDesc')
-    });
-  };
-
-  const handleArchiveBooking = (bookingId: string) => {
-    // Find the booking
-    const booking = bookings.find(b => b.id === bookingId);
-    if (!booking) return;
-
-    // Update status to archived
-    const updatedBooking: Booking = {
-      ...booking,
-      status: 'archived',
-      updatedAt: new Date().toISOString()
-    };
-
-    // Save to local storage
-    saveBooking(updatedBooking);
-    
-    // Update local state
-    const updatedBookings = bookings.map(b => 
-      b.id === bookingId ? updatedBooking : b
-    );
-    
-    setBookings(updatedBookings);
-    setFilteredBookings(updatedBookings);
-    
-    toast({
-      title: t('bookingArchived'),
-      description: t('bookingArchivedDesc')
     });
   };
 
@@ -294,6 +297,8 @@ const BookingTable = ({ branchId }: BookingTableProps) => {
               <TableHead>{t('endDate')}</TableHead>
               <TableHead>{t('status')}</TableHead>
               <TableHead>{t('totalPrice')}</TableHead>
+              {/* Show KM driven for completed bookings */}
+              <TableHead>{t('kmDriven')}</TableHead>
               <TableHead>{t('actions')}</TableHead>
             </TableRow>
           </TableHeader>
@@ -305,7 +310,10 @@ const BookingTable = ({ branchId }: BookingTableProps) => {
               return (
                 <TableRow key={booking.id} className="hover:bg-muted/50">
                   <TableCell className="font-mono text-xs">{booking.id.substring(0, 8)}</TableCell>
-                  <TableCell className="font-medium">{customer?.name || 'Unknown'}</TableCell>
+                  <TableCell className="font-medium">
+                    {customer?.name || 'Unknown'}
+                    <div className="text-xs text-gray-500">ID: {customer?.id.substring(0, 6) || 'N/A'}</div>
+                  </TableCell>
                   <TableCell>{vehicle ? `${vehicle.make} ${vehicle.model}` : 'Unknown'}</TableCell>
                   <TableCell>{format(new Date(booking.startDate), 'MMM dd, yyyy')}</TableCell>
                   <TableCell>{format(new Date(booking.endDate), 'MMM dd, yyyy')}</TableCell>
@@ -315,32 +323,35 @@ const BookingTable = ({ branchId }: BookingTableProps) => {
                     </Badge>
                   </TableCell>
                   <TableCell>{booking.totalPrice} {t('currency')}</TableCell>
+                  <TableCell>
+                    {booking.kmDriven ? `${booking.kmDriven} km` : '-'}
+                  </TableCell>
                   <TableCell className="space-x-2">
+                    {booking.status === 'ongoing' && (
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleCompleteBooking(booking)}
+                      >
+                        {t('complete')}
+                      </Button>
+                    )}
+                    
                     <Button 
                       variant="outline" 
                       size="sm"
                       onClick={() => handleEdit(booking)}
-                      disabled={booking.status === 'archived' || (userRole !== 'admin' && booking.status === 'booked')}
+                      disabled={booking.status === 'completed' && userRole !== 'admin'}
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
-                    
-                    {booking.status !== 'archived' && (
-                      <Button 
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleArchiveBooking(booking.id)}
-                      >
-                        <Archive className="h-4 w-4" />
-                      </Button>
-                    )}
                   </TableCell>
                 </TableRow>
               );
             })}
             {filteredBookings.length === 0 && (
               <TableRow>
-                <TableCell colSpan={8} className="h-24 text-center">
+                <TableCell colSpan={9} className="h-24 text-center">
                   {t('noBookingsFound')}
                 </TableCell>
               </TableRow>
@@ -349,12 +360,37 @@ const BookingTable = ({ branchId }: BookingTableProps) => {
         </Table>
       </div>
 
+      {/* Confirmation dialog for completing a booking */}
+      <AlertDialog open={isConfirmDialogOpen} onOpenChange={setIsConfirmDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('completeBooking')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('completeBookingConfirmation')}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmCompleteBooking}>
+              {t('proceed')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {editingBooking ? (completingBooking ? t('completeBooking') : t('editBooking')) : t('createNewBooking')}
+            </DialogTitle>
+          </DialogHeader>
           <BookingForm 
             initialData={editingBooking}
             onSubmit={editingBooking ? handleBookingUpdate : handleBookingCreate}
             onCancel={() => setIsDialogOpen(false)}
+            isCompleting={!!completingBooking}
+            userRole={userRole}
           />
         </DialogContent>
       </Dialog>

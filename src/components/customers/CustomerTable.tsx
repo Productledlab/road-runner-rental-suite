@@ -61,6 +61,21 @@ const CustomerTable = ({ branchId }: CustomerTableProps) => {
   };
 
   const handleCustomerUpdate = (updatedCustomer: Customer) => {
+    // Check if customer with same passport already exists (except for this customer)
+    const existingCustomer = customers.find(c => 
+      c.passport.toLowerCase() === updatedCustomer.passport.toLowerCase() && 
+      c.id !== updatedCustomer.id
+    );
+    
+    if (existingCustomer) {
+      toast({
+        title: t('passportAlreadyExists'),
+        description: t('customerWithPassportExists'),
+        variant: 'destructive'
+      });
+      return;
+    }
+    
     // Ensure branch ID is preserved
     const customerToSave = {
       ...updatedCustomer,
@@ -81,7 +96,7 @@ const CustomerTable = ({ branchId }: CustomerTableProps) => {
     
     toast({
       title: t('updateCustomer'),
-      description: "Customer information has been updated successfully."
+      description: t('customerUpdatedSuccess')
     });
   };
 
@@ -91,6 +106,20 @@ const CustomerTable = ({ branchId }: CustomerTableProps) => {
   };
 
   const handleCustomerCreate = (newCustomer: Customer) => {
+    // Check if customer with same passport already exists
+    const existingCustomer = customers.find(c => 
+      c.passport.toLowerCase() === newCustomer.passport.toLowerCase()
+    );
+    
+    if (existingCustomer) {
+      toast({
+        title: t('passportAlreadyExists'),
+        description: t('customerWithPassportExists'),
+        variant: 'destructive'
+      });
+      return;
+    }
+    
     // Set branch ID
     const customerToSave = {
       ...newCustomer,
@@ -109,9 +138,12 @@ const CustomerTable = ({ branchId }: CustomerTableProps) => {
     
     toast({
       title: t('addCustomer'),
-      description: "New customer has been added successfully."
+      description: t('customerAddedSuccess')
     });
   };
+
+  // Only show customer type column for admin users
+  const isAdmin = userRole === 'admin';
 
   return (
     <div>
@@ -141,11 +173,11 @@ const CustomerTable = ({ branchId }: CustomerTableProps) => {
               <TableHead>{t('email')}</TableHead>
               <TableHead>{t('phone')}</TableHead>
               <TableHead>{t('passport')}</TableHead>
-              {userRole === 'admin' && (
+              {isAdmin && (
                 <TableHead>{t('type')}</TableHead>
               )}
               <TableHead>{t('dateAdded')}</TableHead>
-              {userRole === 'admin' && (
+              {isAdmin && (
                 <TableHead>{t('branch')}</TableHead>
               )}
               <TableHead>{t('actions')}</TableHead>
@@ -159,7 +191,7 @@ const CustomerTable = ({ branchId }: CustomerTableProps) => {
                 <TableCell>{customer.email}</TableCell>
                 <TableCell>{customer.phone}</TableCell>
                 <TableCell>{customer.passport}</TableCell>
-                {userRole === 'admin' && (
+                {isAdmin && (
                   <TableCell>
                     <Badge className={customer.type === 'new' ? "bg-blue-100 text-blue-800" : "bg-green-100 text-green-800"}>
                       {t(customer.type)}
@@ -167,7 +199,7 @@ const CustomerTable = ({ branchId }: CustomerTableProps) => {
                   </TableCell>
                 )}
                 <TableCell>{format(new Date(customer.dateAdded), 'MMM dd, yyyy')}</TableCell>
-                {userRole === 'admin' && (
+                {isAdmin && (
                   <TableCell>{customer.branchId}</TableCell>
                 )}
                 <TableCell>
@@ -183,7 +215,7 @@ const CustomerTable = ({ branchId }: CustomerTableProps) => {
             ))}
             {filteredCustomers.length === 0 && (
               <TableRow>
-                <TableCell colSpan={userRole === 'admin' ? 9 : 7} className="h-24 text-center">
+                <TableCell colSpan={isAdmin ? 9 : 7} className="h-24 text-center">
                   {t('noCustomersFound')}
                 </TableCell>
               </TableRow>

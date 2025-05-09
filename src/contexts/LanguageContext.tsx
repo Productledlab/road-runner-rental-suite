@@ -1,228 +1,321 @@
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
-import React, { createContext, useState, useContext, ReactNode } from 'react';
-
-type Language = 'en' | 'ar';
-
-type Translations = {
-  [key: string]: {
-    en: string;
-    ar: string;
-  };
-};
-
-// All translatable text goes here
-const translations: Translations = {
-  // Sidebar items
-  dashboard: { en: "Dashboard", ar: "لوحة المعلومات" },
-  vehicles: { en: "Vehicles", ar: "المركبات" },
-  customers: { en: "Customers", ar: "العملاء" },
-  bookings: { en: "Bookings", ar: "الحجوزات" },
-  archivedVehicles: { en: "Archived Vehicles", ar: "المركبات المؤرشفة" },
-  settings: { en: "Settings", ar: "الإعدادات" },
-  loggedInAs: { en: "Logged in as:", ar: "تسجيل الدخول باسم:" },
-  adminUser: { en: "Admin User", ar: "مستخدم المسؤول" },
-  language: { en: "English", ar: "العربية" },
-  
-  // Common UI elements
-  logout: { en: "Logout", ar: "تسجيل خروج" },
-  returnToHome: { en: "Return to Home", ar: "العودة إلى الرئيسية" },
-  
-  // Dashboard
-  recentBookings: { en: "Recent Bookings", ar: "الحجوزات الأخيرة" },
-  totalVehicles: { en: "Total Active Vehicles", ar: "إجمالي المركبات النشطة" },
-  availableVehicles: { en: "Available Vehicles", ar: "المركبات المتاحة" },
-  activeBookings: { en: "Active Bookings", ar: "الحجوزات النشطة" },
-  totalRevenue: { en: "Total Revenue", ar: "إجمالي الإيرادات" },
-  monthlyRevenue: { en: "Monthly Revenue", ar: "الإيرادات الشهرية" },
-  fleetStatus: { en: "Fleet Status", ar: "حالة الأسطول" },
-  revenue: { en: "Revenue", ar: "الإيرادات" },
-  
-  // Vehicles page
-  addNewVehicle: { en: "Add New Vehicle", ar: "إضافة مركبة جديدة" },
-  
-  // Customers page
-  addNewCustomer: { en: "Add New Customer", ar: "إضافة عميل جديد" },
-  
-  // Bookings page
-  addNewBooking: { en: "Add New Booking", ar: "إضافة حجز جديد" },
-  archiveBooking: { en: "Archive Booking", ar: "أرشفة الحجز" },
-  
-  // Settings page
-  userManagement: { en: "User Management", ar: "إدارة المستخدمين" },
-  teamMembers: { en: "Team members and access control.", ar: "أعضاء الفريق والتحكم في الوصول." },
-  systemSettings: { en: "System Settings", ar: "إعدادات النظام" },
-  configureApp: { en: "Configure application settings.", ar: "تكوين إعدادات التطبيق." },
-  nextVersion: { en: "This feature will be implemented in the next version.", ar: "سيتم تنفيذ هذه الميزة في الإصدار التالي." },
-
-  // Form labels and buttons
-  cancel: { en: "Cancel", ar: "إلغاء" },
-  submit: { en: "Submit", ar: "إرسال" },
-  update: { en: "Update", ar: "تحديث" },
-  add: { en: "Add", ar: "إضافة" },
-  edit: { en: "Edit", ar: "تعديل" },
-  delete: { en: "Delete", ar: "حذف" },
-  search: { en: "Search", ar: "بحث" },
-  filter: { en: "Filter", ar: "تصفية" },
-  removeImage: { en: "Remove Image", ar: "إزالة الصورة" },
-  archive: { en: "Archive", ar: "أرشفة" },
-  restore: { en: "Restore", ar: "استعادة" },
-  
-  // Login page
-  email: { en: "Email", ar: "البريد الإلكتروني" },
-  password: { en: "Password", ar: "كلمة المرور" },
-  login: { en: "Log in", ar: "تسجيل الدخول" },
-  loggingIn: { en: "Logging in...", ar: "جاري تسجيل الدخول..." },
-  signIn: { en: "Sign in to access the management portal", ar: "تسجيل الدخول للوصول إلى بوابة الإدارة" },
-  demoCredentials: { en: "Demo credentials:", ar: "بيانات اعتماد تجريبية:" },
-  invalidCredentials: { en: "Invalid credentials. Try admin@roadrunner.com/admin123 or branch logins.", ar: "بيانات اعتماد غير صالحة. جرب admin@roadrunner.com/admin123 أو تسجيلات الدخول للفروع." },
-  enterBothFields: { en: "Please enter both email and password", ar: "يرجى إدخال البريد الإلكتروني وكلمة المرور" },
-  
-  // 404 Page
-  notFound: { en: "Oops! Page not found", ar: "عفوا! الصفحة غير موجودة" },
-  notFoundDesc: { en: "The page you are looking for might have been removed or is temporarily unavailable.", ar: "الصفحة التي تبحث عنها ربما تمت إزالتها أو غير متاحة مؤقتًا." },
-  
-  // Table headers and column names
-  bookingId: { en: "Booking ID", ar: "رقم الحجز" },
-  customerId: { en: "Customer ID", ar: "رقم العميل" },
-  customer: { en: "Customer", ar: "العميل" },
-  vehicle: { en: "Vehicle", ar: "المركبة" },
-  startDate: { en: "Start Date", ar: "تاريخ البدء" },
-  endDate: { en: "End Date", ar: "تاريخ الانتهاء" },
-  status: { en: "Status", ar: "الحالة" },
-  totalPrice: { en: "Total Price", ar: "السعر الإجمالي" },
-  actions: { en: "Actions", ar: "إجراءات" },
-  carNumber: { en: "Car Number", ar: "رقم السيارة" },
-  year: { en: "Year", ar: "السنة" },
-  color: { en: "Color", ar: "اللون" },
-  type: { en: "Type", ar: "النوع" },
-  fuelType: { en: "Fuel Type", ar: "نوع الوقود" },
-  currentKm: { en: "Current KM", ar: "الكيلومترات الحالية" },
-  pricePerDay: { en: "Price/Day", ar: "السعر/يوم" },
-  name: { en: "Name", ar: "الاسم" },
-  email: { en: "Email", ar: "البريد الإلكتروني" },
-  phone: { en: "Phone", ar: "الهاتف" },
-  passport: { en: "Passport", ar: "جواز السفر" },
-  dateAdded: { en: "Date Added", ar: "تاريخ الإضافة" },
-  branch: { en: "Branch", ar: "الفرع" },
-  
-  // Form fields and labels
-  fullName: { en: "Full Name", ar: "الاسم الكامل" },
-  emailAddress: { en: "Email Address", ar: "البريد الإلكتروني" },
-  phoneNumber: { en: "Phone Number", ar: "رقم الهاتف" },
-  passportNumber: { en: "Passport Number", ar: "رقم جواز السفر" },
-  visaNumber: { en: "Visa Number", ar: "رقم التأشيرة" },
-  customerType: { en: "Customer Type", ar: "نوع العميل" },
-  address: { en: "Address", ar: "العنوان" },
-  
-  // Booking form
-  selectCustomer: { en: "Select a customer", ar: "اختر عميلاً" },
-  selectStartDate: { en: "Select start date", ar: "اختر تاريخ البدء" },
-  selectEndDate: { en: "Select end date", ar: "اختر تاريخ الانتهاء" },
-  selectDatesFirst: { en: "Select dates first", ar: "اختر التواريخ أولا" },
-  selectVehicle: { en: "Select a vehicle", ar: "اختر مركبة" },
-  noVehiclesAvailable: { en: "No vehicles available for selected dates", ar: "لا توجد مركبات متاحة للتواريخ المحددة" },
-  startKm: { en: "Start KM Reading", ar: "قراءة العداد عند البدء" },
-  returnKm: { en: "Return KM Reading", ar: "قراءة العداد عند العودة" },
-  kmDriven: { en: "Kilometers Driven", ar: "الكيلومترات المقطوعة" },
-  
-  // Status options
-  pending: { en: "Pending", ar: "قيد الانتظار" },
-  ongoing: { en: "Ongoing", ar: "جاري" },
-  completed: { en: "Completed", ar: "مكتمل" },
-  cancelled: { en: "Cancelled", ar: "ملغي" },
-  available: { en: "Available", ar: "متاح" },
-  booked: { en: "Booked", ar: "محجوز" },
-  maintenance: { en: "Maintenance", ar: "صيانة" },
-  archived: { en: "Archived", ar: "مؤرشف" },
-  
-  // Vehicle types
-  sedan: { en: "Sedan", ar: "سيدان" },
-  suv: { en: "SUV", ar: "دفع رباعي" },
-  hatchback: { en: "Hatchback", ar: "هاتشباك" },
-  luxury: { en: "Luxury", ar: "فاخرة" },
-  van: { en: "Van", ar: "شاحنة صغيرة" },
-  
-  // Fuel types
-  petrol: { en: "Petrol", ar: "بنزين" },
-  diesel: { en: "Diesel", ar: "ديزل" },
-  electric: { en: "Electric", ar: "كهربائي" },
-  hybrid: { en: "Hybrid", ar: "هجين" },
-  
-  // Customer types
-  new: { en: "New", ar: "جديد" },
-  returning: { en: "Returning", ar: "عائد" },
-  
-  // Messages
-  searchVehicles: { en: "Search vehicles...", ar: "البحث عن مركبات..." },
-  searchCustomerName: { en: "Search by customer name...", ar: "البحث باسم العميل..." },
-  allStatuses: { en: "All Statuses", ar: "كل الحالات" },
-  allTypes: { en: "All Types", ar: "كل الأنواع" },
-  clearFilters: { en: "Clear Filters", ar: "مسح عوامل التصفية" },
-  noVehiclesFound: { en: "No vehicles found.", ar: "لم يتم العثور على مركبات." },
-  vehicleArchived: { en: "Vehicle archived", ar: "تم أرشفة المركبة" },
-  vehicleArchivedDesc: { en: "The vehicle has been moved to the archive.", ar: "تم نقل المركبة إلى الأرشيف." },
-  vehicleUpdated: { en: "Vehicle updated", ar: "تم تحديث المركبة" },
-  vehicleUpdatedDesc: { en: "Vehicle information has been updated successfully.", ar: "تم تحديث معلومات المركبة بنجاح." },
-  vehicleDetails: { en: "Vehicle Details", ar: "تفاصيل المركبة" },
-  noBookingsFound: { en: "No bookings found matching the criteria.", ar: "لم يتم العثور على حجوزات تطابق المعايير." },
-  bookingUpdated: { en: "Booking updated", ar: "تم تحديث الحجز" },
-  bookingUpdatedDesc: { en: "Booking has been updated successfully.", ar: "تم تحديث الحجز بنجاح." },
-  bookingCreated: { en: "Booking created", ar: "تم إنشاء الحجز" },
-  bookingCreatedDesc: { en: "New booking has been created successfully.", ar: "تم إنشاء حجز جديد بنجاح." },
-  bookingArchived: { en: "Booking archived", ar: "تم أرشفة الحجز" },
-  bookingArchivedDesc: { en: "The booking has been archived.", ar: "تم أرشفة الحجز." },
-  newBooking: { en: "New Booking", ar: "حجز جديد" },
-  createNewBooking: { en: "Create New Booking", ar: "إنشاء حجز جديد" },
-  editBooking: { en: "Edit Booking", ar: "تحرير الحجز" },
-  completeBooking: { en: "Complete Booking", ar: "إكمال الحجز" },
-  updateBookingDetails: { en: "Update booking details", ar: "تحديث تفاصيل الحجز" },
-  enterBookingDetails: { en: "Enter details for the new booking", ar: "أدخل تفاصيل الحجز الجديد" },
-  enterReturnKm: { en: "Enter the return km reading to complete the booking", ar: "أدخل قراءة العداد عند العودة لإكمال الحجز" },
-  createBooking: { en: "Create Booking", ar: "إنشاء حجز" },
-  updateCustomer: { en: "Update Customer", ar: "تحديث العميل" },
-  addCustomer: { en: "Add Customer", ar: "إضافة عميل" },
-  general: { en: "General", ar: "عام" },
-  specifications: { en: "Specifications", ar: "المواصفات" },
-  images: { en: "Images", ar: "الصور" },
-  view: { en: "View", ar: "عرض" },
-  noImage: { en: "No Image", ar: "لا توجد صورة" },
-  make: { en: "Make", ar: "الشركة المصنعة" },
-  model: { en: "Model", ar: "الطراز" },
-  enterNewMake: { en: "Enter new make", ar: "أدخل شركة مصنعة جديدة" },
-  enterNewModel: { en: "Enter new model", ar: "أدخل طراز جديد" },
-  archivedVehiclesDesc: { en: "View and manage archived vehicles", ar: "عرض وإدارة المركبات المؤرشفة" },
-  
-  // Dashboard widgets
-  totalActiveVehicles: { en: "Total Active Vehicles", ar: "إجمالي المركبات النشطة" },
-  
-  // Currency
-  currency: { en: "R.O.", ar: "ر.ع." },
-  perDay: { en: "/day", ar: "/يوم" },
-  required: { en: "is required", ar: "مطلوب" },
-  enterValidEmail: { en: "Please enter a valid email address", ar: "يرجى إدخال عنوان بريد إلكتروني صالح" },
-};
-
-type LanguageContextType = {
-  language: Language;
-  toggleLanguage: () => void;
+interface LanguageContextProps {
+  language: string;
+  setLanguage: (language: string) => void;
   t: (key: string) => string;
-};
+}
 
-const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
+const LanguageContext = createContext<LanguageContextProps | undefined>(undefined);
 
-export const LanguageProvider = ({ children }: { children: ReactNode }) => {
-  const [language, setLanguage] = useState<Language>('en');
+interface LanguageProviderProps {
+  children: React.ReactNode;
+}
 
-  const toggleLanguage = () => {
-    setLanguage(prevLang => prevLang === 'en' ? 'ar' : 'en');
+export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) => {
+  const [language, setLanguage] = useState(localStorage.getItem('language') || 'en');
+
+  useEffect(() => {
+    localStorage.setItem('language', language);
+  }, [language]);
+
+  const translations = {
+    en: {
+      dashboard: 'Dashboard',
+      vehicles: 'Vehicles',
+      bookings: 'Bookings',
+      customers: 'Customers',
+      settings: 'Settings',
+      logout: 'Logout',
+      language: 'Language',
+      branch: 'Branch',
+      allBranches: 'All Branches',
+      totalActiveVehicles: 'Total Active Vehicles',
+      availableVehicles: 'Available Vehicles',
+      activeBookings: 'Active Bookings',
+      totalRevenue: 'Total Revenue',
+      vehicleStatus: 'Vehicle Status',
+      revenueOverview: 'Revenue Overview',
+      recentBookings: 'Recent Bookings',
+      allStatuses: 'All Statuses',
+      allTypes: 'All Types',
+      searchVehicles: 'Search Vehicles',
+      status: 'Status',
+      type: 'Type',
+      carNumber: 'Car Number',
+      vehicle: 'Vehicle',
+      year: 'Year',
+      color: 'Color',
+      fuelType: 'Fuel Type',
+      currentKm: 'Current Km',
+      pricePerDay: 'Price Per Day',
+      actions: 'Actions',
+      noVehiclesFound: 'No vehicles found',
+      vehicleDetails: 'Vehicle Details',
+      noCustomersFound: 'No customers found',
+      noBookingsFound: 'No bookings found',
+      createNewBooking: 'Create New Booking',
+      updateBookingDetails: 'Update Booking Details',
+      enterBookingDetails: 'Enter Booking Details',
+      totalPrice: 'Total Price',
+      customer: 'Customer',
+      startDate: 'Start Date',
+      endDate: 'End Date',
+      selectCustomer: 'Select Customer',
+      selectStartDate: 'Select Start Date',
+      selectEndDate: 'Select End Date',
+      selectVehicle: 'Select Vehicle',
+      selectDatesFirst: 'Select Dates First',
+      noVehiclesAvailable: 'No vehicles available for the selected dates',
+      startKm: 'Start Km Reading',
+      cancel: 'Cancel',
+      update: 'Update',
+      createBooking: 'Create Booking',
+      addNewCustomer: 'Add New Customer',
+      fullName: 'Full Name',
+      emailAddress: 'Email Address',
+      phoneNumber: 'Phone Number',
+      passportNumber: 'Passport Number',
+      visaNumber: 'Visa Number',
+      address: 'Address',
+      required: 'Required',
+      enterValidEmail: 'Enter a valid email',
+      addCustomer: 'Add Customer',
+      returnKm: 'Return Km Reading',
+      kmDriven: 'Km Driven',
+      sedan: 'Sedan',
+      suv: 'SUV',
+      hatchback: 'Hatchback',
+      luxury: 'Luxury',
+      van: 'Van',
+      petrol: 'Petrol',
+      diesel: 'Diesel',
+      electric: 'Electric',
+      hybrid: 'Hybrid',
+      available: 'Available',
+      booked: 'Booked',
+      maintenance: 'Maintenance',
+      archived: 'Archived',
+      pending: 'Pending',
+      ongoing: 'Ongoing',
+      completed: 'Completed',
+      cancelled: 'Cancelled',
+      new: 'New',
+      returning: 'Returning',
+      weekly: 'Weekly',
+      monthly: 'Monthly',
+      revenue: 'Revenue',
+      day: 'Day',
+      month: 'Month',
+      perDay: '/day',
+      currency: 'OMR',
+      addNewVehicle: 'Add New Vehicle',
+      editVehicle: 'Edit Vehicle',
+      make: 'Make',
+      model: 'Model',
+      save: 'Save',
+      customerId: 'Customer ID',
+      name: 'Name',
+      email: 'Email',
+      phone: 'Phone',
+      passport: 'Passport',
+      type: 'Type',
+      dateAdded: 'Date Added',
+      branch: 'Branch',
+      actions: 'Actions',
+      searchCustomerName: 'Search Customer Name',
+      bookingId: 'Booking ID',
+      clearFilters: 'Clear Filters',
+      newBooking: 'New Booking',
+      completeBooking: 'Complete Booking',
+      editBooking: 'Edit Booking',
+      completeBookingConfirmation: 'Are you sure you want to complete this booking? You will need to enter the return km reading.',
+      proceed: 'Proceed',
+      complete: 'Complete',
+      enterReturnKm: 'Enter return km reading to complete the booking',
+      bookingUpdated: 'Booking Updated',
+      bookingUpdatedDesc: 'Booking information has been updated successfully',
+      bookingCreated: 'Booking Created',
+      bookingCreatedDesc: 'A new booking has been created successfully',
+      vehicleUpdated: 'Vehicle Updated',
+      vehicleUpdatedDesc: 'Vehicle information has been updated successfully',
+      vehicleArchived: 'Vehicle Archived',
+      vehicleArchivedDesc: 'The vehicle has been removed from the active vehicles list',
+      updateCustomer: 'Update Customer',
+      customerUpdatedSuccess: 'Customer information has been updated successfully',
+      customerAddedSuccess: 'A new customer has been added successfully',
+      archivedVehicles: 'Archived Vehicles',
+      archivedVehiclesDesc: 'View archived vehicles',
+      restore: 'Restore',
+      accessDenied: 'Access Denied',
+      onlyAdminCanArchiveVehicles: 'Only admins can archive vehicles',
+      onlyAdminCanEditVehicles: 'Only admins can edit vehicles',
+      onlyAdminCanManageVehicles: 'Only admins can manage vehicles',
+      onlyAdminCanAccessArchivedVehicles: 'Only admins can access the archived vehicles page',
+      cannotEditCompletedBooking: 'Cannot edit completed bookings. Please contact an admin.',
+      passportAlreadyExists: 'Passport Already Exists',
+      customerWithPassportExists: 'A customer with this passport number already exists',
+      customerExists: 'Customer Exists',
+      updatingExistingCustomer: 'Existing customer information will be updated',
+      totalBookings: 'Total Bookings',
+      completedBookings: 'Completed Bookings'
+    },
+    ar: {
+      dashboard: 'لوحة القيادة',
+      vehicles: 'المركبات',
+      bookings: 'الحجوزات',
+      customers: 'العملاء',
+      settings: 'الإعدادات',
+      logout: 'تسجيل الخروج',
+      language: 'اللغة',
+      branch: 'الفرع',
+      allBranches: 'جميع الفروع',
+      totalActiveVehicles: 'إجمالي المركبات النشطة',
+      availableVehicles: 'المركبات المتاحة',
+      activeBookings: 'الحجوزات النشطة',
+      totalRevenue: 'إجمالي الإيرادات',
+      vehicleStatus: 'حالة المركبات',
+      revenueOverview: 'نظرة عامة على الإيرادات',
+      recentBookings: 'الحجوزات الأخيرة',
+      allStatuses: 'جميع الحالات',
+      allTypes: 'جميع الأنواع',
+      searchVehicles: 'البحث عن مركبات',
+      status: 'الحالة',
+      type: 'النوع',
+      carNumber: 'رقم السيارة',
+      vehicle: 'المركبة',
+      year: 'السنة',
+      color: 'اللون',
+      fuelType: 'نوع الوقود',
+      currentKm: 'الكيلومترات الحالية',
+      pricePerDay: 'السعر في اليوم',
+      actions: 'الإجراءات',
+      noVehiclesFound: 'لم يتم العثور على مركبات',
+      vehicleDetails: 'تفاصيل المركبة',
+      noCustomersFound: 'لم يتم العثور على عملاء',
+      noBookingsFound: 'لم يتم العثور على حجوزات',
+      createNewBooking: 'إنشاء حجز جديد',
+      updateBookingDetails: 'تحديث تفاصيل الحجز',
+      enterBookingDetails: 'أدخل تفاصيل الحجز',
+      totalPrice: 'السعر الإجمالي',
+      customer: 'العميل',
+      startDate: 'تاريخ البدء',
+      endDate: 'تاريخ الانتهاء',
+      selectCustomer: 'اختر العميل',
+      selectStartDate: 'اختر تاريخ البدء',
+      selectEndDate: 'اختر تاريخ الانتهاء',
+      selectVehicle: 'اختر المركبة',
+      selectDatesFirst: 'اختر التواريخ أولاً',
+      noVehiclesAvailable: 'لا توجد مركبات متاحة للتواريخ المحددة',
+      startKm: 'قراءة عداد البدء',
+      cancel: 'إلغاء',
+      update: 'تحديث',
+      createBooking: 'إنشاء حجز',
+      addNewCustomer: 'إضافة عميل جديد',
+      fullName: 'الاسم الكامل',
+      emailAddress: 'البريد الإلكتروني',
+      phoneNumber: 'رقم الهاتف',
+      passportNumber: 'رقم جواز السفر',
+      visaNumber: 'رقم التأشيرة',
+      address: 'العنوان',
+      required: 'مطلوب',
+      enterValidEmail: 'أدخل بريد إلكتروني صالح',
+      addCustomer: 'إضافة عميل',
+      returnKm: 'قراءة العداد عند العودة',
+      kmDriven: 'الكيلومترات المقطوعة',
+      sedan: 'سيدان',
+      suv: 'دفع رباعي',
+      hatchback: 'هاتشباك',
+      luxury: 'فاخرة',
+      van: 'شاحنة صغيرة',
+      petrol: 'بنزين',
+      diesel: 'ديزل',
+      electric: 'كهربائي',
+      hybrid: 'هجين',
+      available: 'متاح',
+      booked: 'محجوز',
+      maintenance: 'صيانة',
+      archived: 'مؤرشف',
+      pending: 'قيد الانتظار',
+      ongoing: 'جارٍ',
+      completed: 'مكتمل',
+      cancelled: 'ملغي',
+      new: 'جديد',
+      returning: 'عائد',
+      weekly: 'أسبوعي',
+      monthly: 'شهري',
+      revenue: 'الإيرادات',
+      day: 'اليوم',
+      month: 'الشهر',
+      perDay: '/يوم',
+      currency: 'ر.ع',
+      addNewVehicle: 'إضافة مركبة جديدة',
+      editVehicle: 'تحرير المركبة',
+      vehicleDetails: 'تفاصيل المركبة',
+      make: 'الصنع',
+      model: 'الموديل',
+      save: 'حفظ',
+      customerId: 'معرف العميل',
+      name: 'الاسم',
+      email: 'البريد الإلكتروني',
+      phone: 'الهاتف',
+      passport: 'جواز السفر',
+      type: 'النوع',
+      dateAdded: 'تاريخ الإضافة',
+      branch: 'الفرع',
+      actions: 'الإجراءات',
+      addNewCustomer: 'إضافة عميل جديد',
+      searchCustomerName: 'البحث عن اسم العميل',
+      bookingId: 'معرف الحجز',
+      clearFilters: 'مسح الفلاتر',
+      newBooking: 'حجز جديد',
+      completeBooking: 'إكمال الحجز',
+      editBooking: 'تحرير الحجز',
+      completeBookingConfirmation: 'هل أنت متأكد من أنك تريد إكمال هذا الحجز؟ ستحتاج إلى إدخال قراءة العداد عند العودة.',
+      proceed: 'متابعة',
+      complete: 'إكمال',
+      enterReturnKm: 'أدخل قراءة العداد عند العودة لإكمال الحجز',
+      bookingUpdated: 'تم تحديث الحجز',
+      bookingUpdatedDesc: 'تم تحديث معلومات الحجز بنجاح',
+      bookingCreated: 'تم إنشاء الحجز',
+      bookingCreatedDesc: 'تم إنشاء حجز جديد بنجاح',
+      vehicleUpdated: 'تم تحديث المركبة',
+      vehicleUpdatedDesc: 'تم تحديث معلومات المركبة بنجاح',
+      vehicleArchived: 'تمت أرشفة المركبة',
+      vehicleArchivedDesc: 'تمت إزالة المركبة من قائمة المركبات النشطة',
+      updateCustomer: 'تم تحديث العميل',
+      customerUpdatedSuccess: 'تم تحديث معلومات العميل بنجاح',
+      customerAddedSuccess: 'تمت إضافة عميل جديد بنجاح',
+      archivedVehicles: 'المركبات المؤرشفة',
+      archivedVehiclesDesc: 'عرض المركبات المؤرشفة',
+      restore: 'استعادة',
+      accessDenied: 'تم رفض الوصول',
+      onlyAdminCanArchiveVehicles: 'يمكن للمسؤولين فقط أرشفة المركبات',
+      onlyAdminCanEditVehicles: 'يمكن للمسؤولين فقط تحرير المركبات',
+      onlyAdminCanManageVehicles: 'يمكن للمسؤولين فقط إدارة المركبات',
+      onlyAdminCanAccessArchivedVehicles: 'يمكن للمسؤولين فقط الوصول إلى صفحة المركبات المؤرشفة',
+      cannotEditCompletedBooking: 'لا يمكن تحرير الحجوزات المكتملة. يرجى الاتصال بالمسؤول.',
+      passportAlreadyExists: 'جواز سفر موجود',
+      customerWithPassportExists: 'يوجد بالفعل عميل بهذا الرقم الجواز',
+      customerExists: 'العميل موجود',
+      updatingExistingCustomer: 'سيتم تحديث معلومات العميل الموجود',
+      totalBookings: 'إجمالي الحجوزات',
+      completedBookings: 'الحجوزات المكتملة'
+    }
   };
 
-  const t = (key: string): string => {
-    return translations[key]?.[language] || key;
+  const t = (key: string) => {
+    return translations[language as keyof typeof translations]?.[key] || key;
+  };
+
+  const value: LanguageContextProps = {
+    language,
+    setLanguage,
+    t,
   };
 
   return (
-    <LanguageContext.Provider value={{ language, toggleLanguage, t }}>
+    <LanguageContext.Provider value={value}>
       {children}
     </LanguageContext.Provider>
   );
@@ -230,7 +323,7 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
 
 export const useLanguage = () => {
   const context = useContext(LanguageContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useLanguage must be used within a LanguageProvider');
   }
   return context;
