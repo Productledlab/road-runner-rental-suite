@@ -12,13 +12,14 @@ import {
   SelectValue, 
 } from '@/components/ui/select';
 import { Vehicle, VehicleStatus, VehicleType, FuelType } from '@/lib/types';
-import { Edit, Archive, Eye } from 'lucide-react';
+import { Edit, Archive, Eye, Calendar } from 'lucide-react';
 import VehicleForm from './VehicleForm';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { getVehicles, saveVehicle, archiveVehicle } from '@/lib/storage-service';
 import { useToast } from '@/hooks/use-toast';
 import VehicleDetails from './VehicleDetails';
 import { useLanguage } from '@/contexts/LanguageContext';
+import BookingForm from '../bookings/BookingForm';
 
 interface VehicleTableProps {
   branchId?: string;
@@ -42,6 +43,8 @@ const VehicleTable = ({ branchId }: VehicleTableProps) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [userRole, setUserRole] = useState<string>('');
+  const [isBookingDialogOpen, setIsBookingDialogOpen] = useState(false);
+  const [selectedVehicleForBooking, setSelectedVehicleForBooking] = useState<Vehicle | null>(null);
   const { toast } = useToast();
   const { t } = useLanguage();
   
@@ -92,6 +95,11 @@ const VehicleTable = ({ branchId }: VehicleTableProps) => {
 
     if (type && type !== 'all') {
       filtered = filtered.filter(vehicle => vehicle.type === type);
+    }
+
+    // Hide archived vehicles for branch users
+    if (userRole !== 'admin') {
+      filtered = filtered.filter(vehicle => vehicle.status !== 'archived');
     }
 
     setFilteredVehicles(filtered);
@@ -176,6 +184,28 @@ const VehicleTable = ({ branchId }: VehicleTableProps) => {
     });
   };
 
+  const handleCreateBooking = (vehicle: Vehicle) => {
+    if (vehicle.status !== 'available') {
+      toast({
+        title: t('vehicleNotAvailable'),
+        description: t('cannotCreateBookingForUnavailableVehicle'),
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    setSelectedVehicleForBooking(vehicle);
+    setIsBookingDialogOpen(true);
+  };
+
+  const handleBookingCreated = () => {
+    // Refresh vehicle list after booking is created
+    const updatedVehicles = getVehicles();
+    setVehicles(updatedVehicles);
+    setFilteredVehicles(updatedVehicles);
+    setIsBookingDialogOpen(false);
+  };
+
   const statusOptions: VehicleStatus[] = ['available', 'booked', 'maintenance'];
   const typeOptions: VehicleType[] = ['sedan', 'suv', 'hatchback', 'luxury', 'van'];
 
@@ -225,7 +255,7 @@ const VehicleTable = ({ branchId }: VehicleTableProps) => {
         </div>
       </div>
 
-      <div className="rounded-md border overflow-hidden">
+      <div className="rounded-md border overflow-hidden overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow className="table-header">
@@ -271,9 +301,9 @@ const VehicleTable = ({ branchId }: VehicleTableProps) => {
                     {t(vehicle.status)}
                   </Badge>
                 </TableCell>
-                <TableCell>{vehicle.pricePerDay} {t('currency')}{t('perDay')}</TableCell>
+                <TableCell>{vehicle.pricePerDay} {t('currency')}</TableCell>
                 <TableCell>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <Button 
                       variant="outline" 
                       size="sm"
@@ -281,6 +311,18 @@ const VehicleTable = ({ branchId }: VehicleTableProps) => {
                     >
                       <Eye className="h-4 w-4" />
                     </Button>
+                    
+                    {vehicle.status === 'available' && (
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleCreateBooking(vehicle)}
+                      >
+                        <Calendar className="h-4 w-4 mr-1" />
+                        <span className="hidden sm:inline">{t('book')}</span>
+                      </Button>
+                    )}
+                    
                     {canManageVehicles && (
                       <>
                         <Button 
@@ -316,6 +358,9 @@ const VehicleTable = ({ branchId }: VehicleTableProps) => {
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{t('editVehicle')}</DialogTitle>
+          </DialogHeader>
           <VehicleForm 
             initialData={editingVehicle}
             onSubmit={handleVehicleUpdate}
@@ -331,6 +376,25 @@ const VehicleTable = ({ branchId }: VehicleTableProps) => {
             <DialogTitle>{t('vehicleDetails')}</DialogTitle>
           </DialogHeader>
           {viewingVehicle && <VehicleDetails vehicle={viewingVehicle} />}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isBookingDialogOpen} onOpenChange={setIsBookingDialogOpen}>
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{t('createBooking')}</DialogTitle>
+            <DialogDescription>
+              {t('createBookingForVehicle', { vehicle: selectedVehicleForBooking ? `${selectedVehicleForBooking.make} ${selectedVehicleForBooking.model}` : '' })}
+            </DialogDescription>
+          </DialogHeader>
+          {selectedVehicleForBooking && (
+            <BookingForm 
+              initialData={null}
+              onSubmit={() => handleBookingCreated()}
+              onCancel={() => setIsBookingDialogOpen(false)}
+              preselectedVehicleId={selectedVehicleForBooking.id}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </div>

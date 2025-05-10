@@ -5,7 +5,7 @@ interface LanguageContextProps {
   language: string;
   setLanguage: (language: string) => void;
   toggleLanguage: () => void;
-  t: (key: string) => string;
+  t: (key: string, params?: Record<string, string>) => string;
 }
 
 const LanguageContext = createContext<LanguageContextProps | undefined>(undefined);
@@ -33,6 +33,8 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
       customers: 'Customers',
       settings: 'Settings',
       archivedVehicles: 'Archived Vehicles',
+      archivedItems: 'Archived Items',
+      archivedItemsDesc: 'View and manage archived vehicles, bookings, and customers',
       logout: 'Logout',
       language: 'Language',
       branch: 'Branch',
@@ -40,6 +42,8 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
       totalActiveVehicles: 'Total Active Vehicles',
       availableVehicles: 'Available Vehicles',
       activeBookings: 'Active Bookings',
+      totalBookings: 'Total Bookings',
+      completedBookings: 'Completed Bookings',
       totalRevenue: 'Total Revenue',
       vehicleStatus: 'Vehicle Status',
       revenueOverview: 'Revenue Overview',
@@ -47,6 +51,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
       allStatuses: 'All Statuses',
       allTypes: 'All Types',
       searchVehicles: 'Search Vehicles',
+      searchCustomers: 'Search Customers',
       status: 'Status',
       type: 'Type',
       carNumber: 'Car Number',
@@ -72,8 +77,11 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
       selectStartDate: 'Select Start Date',
       selectEndDate: 'Select End Date',
       selectVehicle: 'Select Vehicle',
+      selectedVehicle: 'Selected Vehicle',
       selectDatesFirst: 'Select Dates First',
       noVehiclesAvailable: 'No vehicles available for the selected dates',
+      vehicleNotAvailable: 'Vehicle Not Available',
+      vehicleNotAvailableForSelectedDates: 'The vehicle is not available for the selected dates. Please choose different dates or select another vehicle.',
       startKm: 'Start Km Reading',
       cancel: 'Cancel',
       update: 'Update',
@@ -85,10 +93,13 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
       passportNumber: 'Passport Number',
       visaNumber: 'Visa Number',
       address: 'Address',
-      required: 'Required',
+      required: 'is required',
       enterValidEmail: 'Enter a valid email',
       addCustomer: 'Add Customer',
       returnKm: 'Return Km Reading',
+      returnKmRequired: 'Return km reading is required',
+      returnKmMustBeGreaterThanStartKm: 'Return km must be greater than start km',
+      endDateMustBeAfterStartDate: 'End date must be after start date',
       kmDriven: 'Km Driven',
       sedan: 'Sedan',
       suv: 'SUV',
@@ -126,6 +137,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
       email: 'Email',
       phone: 'Phone',
       passport: 'Passport',
+      visa: 'Visa',
       dateAdded: 'Date Added',
       bookingId: 'Booking ID',
       clearFilters: 'Clear Filters',
@@ -159,8 +171,6 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
       customerWithPassportExists: 'A customer with this passport number already exists',
       customerExists: 'Customer Exists',
       updatingExistingCustomer: 'Existing customer information will be updated',
-      totalBookings: 'Total Bookings',
-      completedBookings: 'Completed Bookings',
       loggedInAs: 'Logged in as',
       adminUser: 'Admin User',
       general: 'General',
@@ -171,7 +181,21 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
       add: 'Add',
       noImage: 'No Image',
       view: 'View',
-      edit: 'Edit'
+      edit: 'Edit',
+      book: 'Book',
+      bookingDetails: 'Booking Details',
+      customerDetails: 'Customer Details',
+      restoreBooking: 'Restore Booking',
+      restoreBookingConfirmation: 'Are you sure you want to restore this booking?',
+      bookingRestored: 'Booking Restored',
+      bookingRestoredDesc: 'The booking has been restored successfully',
+      restoreCustomer: 'Restore Customer',
+      restoreCustomerConfirmation: 'Are you sure you want to restore this customer?',
+      customerRestored: 'Customer Restored',
+      customerRestoredDesc: 'The customer has been restored successfully',
+      createdAt: 'Created At',
+      cannotCreateBookingForUnavailableVehicle: 'Cannot create a booking for an unavailable vehicle',
+      createBookingForVehicle: 'Create a booking for {vehicle}',
     },
     ar: {
       dashboard: 'لوحة القيادة',
@@ -180,6 +204,8 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
       customers: 'العملاء',
       settings: 'الإعدادات',
       archivedVehicles: 'المركبات المؤرشفة',
+      archivedItems: 'العناصر المؤرشفة',
+      archivedItemsDesc: 'عرض وإدارة المركبات والحجوزات والعملاء المؤرشفين',
       logout: 'تسجيل الخروج',
       language: 'اللغة',
       branch: 'الفرع',
@@ -187,6 +213,8 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
       totalActiveVehicles: 'إجمالي المركبات النشطة',
       availableVehicles: 'المركبات المتاحة',
       activeBookings: 'الحجوزات النشطة',
+      totalBookings: 'إجمالي الحجوزات',
+      completedBookings: 'الحجوزات المكتملة',
       totalRevenue: 'إجمالي الإيرادات',
       vehicleStatus: 'حالة المركبات',
       revenueOverview: 'نظرة عامة على الإيرادات',
@@ -194,6 +222,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
       allStatuses: 'جميع الحالات',
       allTypes: 'جميع الأنواع',
       searchVehicles: 'البحث عن مركبات',
+      searchCustomers: 'البحث عن عملاء',
       status: 'الحالة',
       type: 'النوع',
       carNumber: 'رقم السيارة',
@@ -219,8 +248,11 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
       selectStartDate: 'اختر تاريخ البدء',
       selectEndDate: 'اختر تاريخ الانتهاء',
       selectVehicle: 'اختر المركبة',
+      selectedVehicle: 'المركبة المحددة',
       selectDatesFirst: 'اختر التواريخ أولاً',
       noVehiclesAvailable: 'لا توجد مركبات متاحة للتواريخ المحددة',
+      vehicleNotAvailable: 'المركبة غير متاحة',
+      vehicleNotAvailableForSelectedDates: 'المركبة غير متاحة للتواريخ المحددة. الرجاء اختيار تواريخ مختلفة أو اختيار مركبة أخرى.',
       startKm: 'قراءة عداد البدء',
       cancel: 'إلغاء',
       update: 'تحديث',
@@ -236,6 +268,9 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
       enterValidEmail: 'أدخل بريد إلكتروني صالح',
       addCustomer: 'إضافة عميل',
       returnKm: 'قراءة العداد عند العودة',
+      returnKmRequired: 'قراءة العداد عند العودة مطلوبة',
+      returnKmMustBeGreaterThanStartKm: 'يجب أن تكون قراءة العداد عند العودة أكبر من قراءة العداد عند البدء',
+      endDateMustBeAfterStartDate: 'يجب أن يكون تاريخ الانتهاء بعد تاريخ البدء',
       kmDriven: 'الكيلومترات المقطوعة',
       sedan: 'سيدان',
       suv: 'دفع رباعي',
@@ -273,6 +308,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
       email: 'البريد الإلكتروني',
       phone: 'الهاتف',
       passport: 'جواز السفر',
+      visa: 'التأشيرة',
       dateAdded: 'تاريخ الإضافة',
       bookingId: 'معرف الحجز',
       clearFilters: 'مسح الفلاتر',
@@ -291,7 +327,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
       vehicleUpdatedDesc: 'تم تحديث معلومات المركبة بنجاح',
       vehicleArchived: 'تمت أرشفة المركبة',
       vehicleArchivedDesc: 'تمت إزالة المركبة من قائمة المركبات النشطة',
-      updateCustomer: 'تم تحديث العميل',
+      updateCustomer: 'تحديث العميل',
       customerUpdatedSuccess: 'تم تحديث معلومات العميل بنجاح',
       customerAddedSuccess: 'تمت إضافة عميل جديد بنجاح',
       archivedVehiclesDesc: 'عرض المركبات المؤرشفة',
@@ -302,14 +338,12 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
       onlyAdminCanManageVehicles: 'يمكن للمسؤولين فقط إدارة المركبات',
       onlyAdminCanAccessArchivedVehicles: 'يمكن للمسؤولين فقط الوصول إلى صفحة المركبات المؤرشفة',
       cannotEditCompletedBooking: 'لا يمكن تحرير الحجوزات المكتملة. يرجى الاتصال بالمسؤول.',
-      passportAlreadyExists: 'جواز سفر موجود',
-      customerWithPassportExists: 'يوجد بالفعل عميل بهذا الرقم الجواز',
+      passportAlreadyExists: 'جواز السفر موجود بالفعل',
+      customerWithPassportExists: 'يوجد عميل بهذا الرقم جواز السفر بالفعل',
       customerExists: 'العميل موجود',
       updatingExistingCustomer: 'سيتم تحديث معلومات العميل الموجود',
-      totalBookings: 'إجمالي الحجوزات',
-      completedBookings: 'الحجوزات المكتملة',
       loggedInAs: 'تم تسجيل الدخول باسم',
-      adminUser: 'المستخدم المسؤول',
+      adminUser: 'المدير',
       general: 'عام',
       specifications: 'المواصفات',
       images: 'الصور',
@@ -318,12 +352,35 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
       add: 'إضافة',
       noImage: 'لا توجد صورة',
       view: 'عرض',
-      edit: 'تحرير'
+      edit: 'تحرير',
+      book: 'حجز',
+      bookingDetails: 'تفاصيل الحجز',
+      customerDetails: 'تفاصيل العميل',
+      restoreBooking: 'استعادة الحجز',
+      restoreBookingConfirmation: 'هل أنت متأكد من رغبتك في استعادة هذا الحجز؟',
+      bookingRestored: 'تمت استعادة الحجز',
+      bookingRestoredDesc: 'تمت استعادة الحجز بنجاح',
+      restoreCustomer: 'استعادة العميل',
+      restoreCustomerConfirmation: 'هل أنت متأكد من رغبتك في استعادة هذا العميل؟',
+      customerRestored: 'تمت استعادة العميل',
+      customerRestoredDesc: 'تمت استعادة العميل بنجاح',
+      createdAt: 'تاريخ الإنشاء',
+      cannotCreateBookingForUnavailableVehicle: 'لا يمكن إنشاء حجز لمركبة غير متاحة',
+      createBookingForVehicle: 'إنشاء حجز لـ {vehicle}',
     }
   };
 
-  const t = (key: string) => {
-    return translations[language as keyof typeof translations]?.[key] || key;
+  const t = (key: string, params?: Record<string, string>): string => {
+    let text = translations[language as keyof typeof translations]?.[key as keyof (typeof translations)['en']] || key;
+    
+    // Replace parameters if provided
+    if (params) {
+      Object.entries(params).forEach(([param, value]) => {
+        text = text.replace(`{${param}}`, value);
+      });
+    }
+    
+    return text;
   };
 
   const value: LanguageContextProps = {

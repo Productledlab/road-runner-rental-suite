@@ -12,6 +12,8 @@ import { getCurrentBranch, getCustomers, getVehicles, getAvailableVehicles, save
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertCircle } from 'lucide-react';
 
 // Create a simplified version of CustomerForm that doesn't use <form> elements
 // to avoid nested forms
@@ -108,7 +110,7 @@ const CustomerFormSimple = ({ onSubmit }: { onSubmit: (customer: Customer) => vo
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="name">{t('fullName')} *</Label>
           <Input
@@ -200,6 +202,7 @@ interface BookingFormProps {
   onCancel: () => void;
   isCompleting?: boolean;
   userRole?: string;
+  preselectedVehicleId?: string;
 }
 
 const defaultBooking: Booking = {
@@ -216,7 +219,7 @@ const defaultBooking: Booking = {
   startKm: 0,
 };
 
-const BookingForm = ({ initialData, onSubmit, onCancel, isCompleting = false, userRole = '' }: BookingFormProps) => {
+const BookingForm = ({ initialData, onSubmit, onCancel, isCompleting = false, userRole = '', preselectedVehicleId = '' }: BookingFormProps) => {
   const [formData, setFormData] = useState<Booking>(initialData || defaultBooking);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [startDate, setStartDate] = useState<Date | undefined>(
@@ -229,6 +232,8 @@ const BookingForm = ({ initialData, onSubmit, onCancel, isCompleting = false, us
   const [availableVehicles, setAvailableVehicles] = useState<any[]>([]);
   const [kmDriven, setKmDriven] = useState<number | undefined>(undefined);
   const [showCustomerForm, setShowCustomerForm] = useState(false);
+  const [vehicleIsAvailable, setVehicleIsAvailable] = useState(true);
+  const [selectedVehicle, setSelectedVehicle] = useState<any>(null);
   const { t } = useLanguage();
   const { toast } = useToast();
   
@@ -245,6 +250,11 @@ const BookingForm = ({ initialData, onSubmit, onCancel, isCompleting = false, us
         initialData.id
       );
       setAvailableVehicles([...vehicles, { id: initialData.vehicleId, status: 'current' }]);
+      
+      // If completing, calculate km driven
+      if (isCompleting && initialData.startKm && initialData.endKm) {
+        setKmDriven(initialData.endKm - initialData.startKm);
+      }
     } else {
       // Generate a random ID if creating a new booking
       const now = new Date();
@@ -256,14 +266,28 @@ const BookingForm = ({ initialData, onSubmit, onCancel, isCompleting = false, us
         updatedAt: now.toISOString(),
         branchId,
         status: 'ongoing',
+        vehicleId: preselectedVehicleId
       });
+      
+      // If a vehicle is preselected, get its info
+      if (preselectedVehicleId) {
+        const allVehicles = getVehicles();
+        const vehicle = allVehicles.find(v => v.id === preselectedVehicleId);
+        if (vehicle) {
+          setSelectedVehicle(vehicle);
+          setFormData(prev => ({
+            ...prev,
+            startKm: vehicle.currentKm || 0
+          }));
+        }
+      }
     }
     
     // Load customers from the current branch
     const branchId = getCurrentBranch();
     const loadedCustomers = getCustomers(branchId === 'all' ? undefined : branchId);
     setCustomers(loadedCustomers);
-  }, [initialData]);
+  }, [initialData, isCompleting, preselectedVehicleId]);
 
   const handleChange = (name: string, value: string | number) => {
     setFormData(prev => ({
@@ -317,11 +341,7 @@ const BookingForm = ({ initialData, onSubmit, onCancel, isCompleting = false, us
         startDate: formattedDate
       }));
       
-      if (!initialData && endDate) {
-        // Load available vehicles for the selected date range
-        const vehicles = getAvailableVehicles(formattedDate, endDate.toISOString());
-        setAvailableVehicles(vehicles);
-      }
+      checkVehicleAvailability(formattedDate, formData.endDate, preselectedVehicleId || formData.vehicleId);
     }
   };
 
@@ -337,11 +357,34 @@ const BookingForm = ({ initialData, onSubmit, onCancel, isCompleting = false, us
         endDate: formattedDate
       }));
       
-      if (!initialData && startDate) {
-        // Load available vehicles for the selected date range
-        const vehicles = getAvailableVehicles(startDate.toISOString(), formattedDate);
-        setAvailableVehicles(vehicles);
-      }
+      checkVehicleAvailability(formData.startDate, formattedDate, preselectedVehicleId || formData.vehicleId);
+    }
+  };
+
+  const checkVehicleAvailability = (start: string, end: string, vehicleId: string) => {
+    if (!start || !end || !vehicleId) {
+      // Can't check availability without all three values
+      setVehicleIsAvailable(true);
+      return;
+    }
+    
+    // Get available vehicles for the date range
+    const vehicles = getAvailableVehicles(start, end, initialData?.id);
+    setAvailableVehicles(vehicles);
+    
+    // Check if selected vehicle is in the available vehicles list
+    const isAvailable = vehicles.some(v => v.id === vehicleId);
+    setVehicleIsAvailable(isAvailable);
+    
+    // Update the vehicle selection list
+    if (isAvailable || initialData?.id) {
+      // If vehicle is available or we're editing an existing booking, keep the vehicle
+    } else {
+      // Otherwise, clear the vehicle selection
+      setFormData(prev => ({
+        ...prev,
+        vehicleId: ''
+      }));
     }
   };
 
@@ -401,21 +444,21 @@ const BookingForm = ({ initialData, onSubmit, onCancel, isCompleting = false, us
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
     
-    if (!formData.customerId) newErrors.customerId = 'Please select a customer';
-    if (!formData.vehicleId) newErrors.vehicleId = 'Please select a vehicle';
-    if (!formData.startDate) newErrors.startDate = 'Start date is required';
-    if (!formData.endDate) newErrors.endDate = 'End date is required';
+    if (!formData.customerId) newErrors.customerId = t('selectCustomer') + ' ' + t('required');
+    if (!formData.vehicleId) newErrors.vehicleId = t('selectVehicle') + ' ' + t('required');
+    if (!formData.startDate) newErrors.startDate = t('startDate') + ' ' + t('required');
+    if (!formData.endDate) newErrors.endDate = t('endDate') + ' ' + t('required');
     else if (new Date(formData.startDate) > new Date(formData.endDate)) {
-      newErrors.endDate = 'End date must be after start date';
+      newErrors.endDate = t('endDateMustBeAfterStartDate');
     }
     
     if (isCompleting) {
       if (!formData.endKm) {
-        newErrors.endKm = 'Return km reading is required to complete the booking';
+        newErrors.endKm = t('returnKmRequired');
       }
       
       if (formData.endKm && formData.startKm && formData.endKm < formData.startKm) {
-        newErrors.endKm = 'Return km reading must be greater than start km reading';
+        newErrors.endKm = t('returnKmMustBeGreaterThanStartKm');
       }
     }
     
@@ -441,14 +484,14 @@ const BookingForm = ({ initialData, onSubmit, onCancel, isCompleting = false, us
           status: 'completed'
         };
         
-        // Update the vehicle's current km reading
+        // Update the vehicle's current km reading and status
         const vehicles = getVehicles();
         const vehicle = vehicles.find(v => v.id === updatedBooking.vehicleId);
         if (vehicle) {
           const updatedVehicle = {
             ...vehicle,
             currentKm: updatedBooking.endKm,
-            status: 'available' as const
+            status: 'available' as VehicleStatus
           };
           saveVehicle(updatedVehicle);
         }
@@ -461,7 +504,7 @@ const BookingForm = ({ initialData, onSubmit, onCancel, isCompleting = false, us
         if (vehicle) {
           const updatedVehicle = {
             ...vehicle,
-            status: 'booked' as const
+            status: 'booked' as VehicleStatus
           };
           saveVehicle(updatedVehicle);
         }
@@ -477,6 +520,18 @@ const BookingForm = ({ initialData, onSubmit, onCancel, isCompleting = false, us
   
   // If branch user is completing a booking, they can only edit price and end KM
   const canOnlyEditPriceAndEndKm = isCompleting && isBranchUser;
+  
+  // If we have a preselected vehicle, load its data for display
+  useEffect(() => {
+    if (preselectedVehicleId && startDate && endDate) {
+      // Check if the vehicle is available for the selected dates
+      checkVehicleAvailability(
+        startDate.toISOString(),
+        endDate.toISOString(),
+        preselectedVehicleId
+      );
+    }
+  }, [preselectedVehicleId, startDate, endDate]);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -486,7 +541,26 @@ const BookingForm = ({ initialData, onSubmit, onCancel, isCompleting = false, us
           : (initialData ? t('updateBookingDetails') : t('enterBookingDetails'))}
       </DialogDescription>
       
-      <div className="grid grid-cols-2 gap-4">
+      {/* Vehicle pre-selection info */}
+      {preselectedVehicleId && selectedVehicle && (
+        <div className="bg-blue-50 p-3 rounded-md mb-4">
+          <p className="text-sm font-medium">{t('selectedVehicle')}: {selectedVehicle.make} {selectedVehicle.model} ({selectedVehicle.carNumber})</p>
+          <p className="text-sm text-gray-500">{t('pricePerDay')}: {selectedVehicle.pricePerDay} {t('currency')}</p>
+        </div>
+      )}
+      
+      {/* Vehicle availability warning */}
+      {preselectedVehicleId && startDate && endDate && !vehicleIsAvailable && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>{t('vehicleNotAvailable')}</AlertTitle>
+          <AlertDescription>
+            {t('vehicleNotAvailableForSelectedDates')}
+          </AlertDescription>
+        </Alert>
+      )}
+      
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* Customer Selection */}
         <div className="space-y-2 col-span-2">
           <Label htmlFor="customerId">{t('customer')} *</Label>
@@ -583,32 +657,34 @@ const BookingForm = ({ initialData, onSubmit, onCancel, isCompleting = false, us
           {errors.endDate && <p className="text-sm text-red-500">{errors.endDate}</p>}
         </div>
         
-        {/* Vehicle Selection */}
-        <div className="space-y-2">
-          <Label htmlFor="vehicleId">{t('vehicle')} *</Label>
-          <Select 
-            value={formData.vehicleId} 
-            onValueChange={(value) => handleChange('vehicleId', value)}
-            disabled={isCompleting || isCompletedBooking || canOnlyEditPriceAndEndKm || !startDate || !endDate}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder={(!startDate || !endDate) ? t('selectDatesFirst') : t('selectVehicle')} />
-            </SelectTrigger>
-            <SelectContent>
-              {availableVehicles.map(vehicle => (
-                <SelectItem key={vehicle.id} value={vehicle.id}>
-                  {vehicle.make} {vehicle.model} ({vehicle.carNumber}) - {vehicle.pricePerDay} {t('currency')}
-                </SelectItem>
-              ))}
-              {availableVehicles.length === 0 && startDate && endDate && (
-                <SelectItem value="no-vehicles" disabled>
-                  {t('noVehiclesAvailable')}
-                </SelectItem>
-              )}
-            </SelectContent>
-          </Select>
-          {errors.vehicleId && <p className="text-sm text-red-500">{errors.vehicleId}</p>}
-        </div>
+        {/* Vehicle Selection - Only show if not preselected */}
+        {!preselectedVehicleId && (
+          <div className="space-y-2">
+            <Label htmlFor="vehicleId">{t('vehicle')} *</Label>
+            <Select 
+              value={formData.vehicleId} 
+              onValueChange={(value) => handleChange('vehicleId', value)}
+              disabled={isCompleting || isCompletedBooking || canOnlyEditPriceAndEndKm || !startDate || !endDate}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={(!startDate || !endDate) ? t('selectDatesFirst') : t('selectVehicle')} />
+              </SelectTrigger>
+              <SelectContent>
+                {availableVehicles.map(vehicle => (
+                  <SelectItem key={vehicle.id} value={vehicle.id}>
+                    {vehicle.make} {vehicle.model} ({vehicle.carNumber}) - {vehicle.pricePerDay} {t('currency')}
+                  </SelectItem>
+                ))}
+                {availableVehicles.length === 0 && startDate && endDate && (
+                  <SelectItem value="no-vehicles" disabled>
+                    {t('noVehiclesAvailable')}
+                  </SelectItem>
+                )}
+              </SelectContent>
+            </Select>
+            {errors.vehicleId && <p className="text-sm text-red-500">{errors.vehicleId}</p>}
+          </div>
+        )}
         
         {/* Start KM */}
         <div className="space-y-2">
@@ -656,29 +732,31 @@ const BookingForm = ({ initialData, onSubmit, onCancel, isCompleting = false, us
         )}
         
         {/* Status */}
-        <div className="space-y-2">
-          <Label htmlFor="status">{t('status')} *</Label>
-          <Select 
-            value={formData.status} 
-            onValueChange={(value) => handleChange('status', value as BookingStatus)}
-            disabled={isCompleting || (userRole !== 'admin' && initialData?.status === 'completed')}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {(userRole === 'admin' 
-                ? ['pending', 'ongoing', 'completed', 'cancelled', 'archived'] 
-                : (isCompleting ? ['completed'] : ['pending', 'ongoing', 'cancelled'])
-              ).map(status => (
-                <SelectItem key={status} value={status}>
-                  {t(status)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {errors.status && <p className="text-sm text-red-500">{errors.status}</p>}
-        </div>
+        {!isCompleting && (
+          <div className="space-y-2">
+            <Label htmlFor="status">{t('status')} *</Label>
+            <Select 
+              value={formData.status} 
+              onValueChange={(value) => handleChange('status', value as BookingStatus)}
+              disabled={isCompleting || (userRole !== 'admin' && initialData?.status === 'completed')}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {(userRole === 'admin' 
+                  ? ['pending', 'ongoing', 'completed', 'cancelled', 'archived'] 
+                  : ['pending', 'ongoing', 'cancelled']
+                ).map(status => (
+                  <SelectItem key={status} value={status}>
+                    {t(status)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.status && <p className="text-sm text-red-500">{errors.status}</p>}
+          </div>
+        )}
         
         {/* Price */}
         <div className="space-y-2">
@@ -701,7 +779,11 @@ const BookingForm = ({ initialData, onSubmit, onCancel, isCompleting = false, us
         <Button type="button" variant="outline" onClick={onCancel}>
           {t('cancel')}
         </Button>
-        <Button type="submit" className="bg-rental-600 hover:bg-rental-700 text-white">
+        <Button 
+          type="submit" 
+          className="bg-rental-600 hover:bg-rental-700 text-white"
+          disabled={preselectedVehicleId && !vehicleIsAvailable && !initialData}
+        >
           {initialData ? (isCompleting ? t('completeBooking') : t('update')) : t('createBooking')}
         </Button>
       </DialogFooter>

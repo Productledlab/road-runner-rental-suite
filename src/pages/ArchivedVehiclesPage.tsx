@@ -5,6 +5,9 @@ import AppLayout from "@/components/layout/AppLayout";
 import ArchivedVehiclesTable from "@/components/vehicles/ArchivedVehiclesTable";
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import ArchivedBookingsTable from "@/components/bookings/ArchivedBookingsTable";
+import ArchivedCustomersTable from "@/components/customers/ArchivedCustomersTable";
 
 const ArchivedVehiclesPage = () => {
   const [userRole, setUserRole] = useState<string | null>(null);
@@ -46,12 +49,30 @@ const ArchivedVehiclesPage = () => {
   return (
     <AppLayout>
       <div className="space-y-6">
-        <h1 className="page-title">{t('archivedVehicles')}</h1>
+        <h1 className="page-title">{t('archivedItems')}</h1>
         <p className="text-gray-500">
-          {t('archivedVehiclesDesc')}
+          {t('archivedItemsDesc')}
         </p>
         
-        <ArchivedVehiclesTable />
+        <Tabs defaultValue="vehicles" className="w-full">
+          <TabsList>
+            <TabsTrigger value="vehicles">{t('vehicles')}</TabsTrigger>
+            <TabsTrigger value="bookings">{t('bookings')}</TabsTrigger>
+            <TabsTrigger value="customers">{t('customers')}</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="vehicles" className="mt-6">
+            <ArchivedVehiclesTable />
+          </TabsContent>
+          
+          <TabsContent value="bookings" className="mt-6">
+            <ArchivedBookingsTable />
+          </TabsContent>
+          
+          <TabsContent value="customers" className="mt-6">
+            <ArchivedCustomersTable />
+          </TabsContent>
+        </Tabs>
       </div>
     </AppLayout>
   );

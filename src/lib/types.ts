@@ -38,7 +38,7 @@ export interface Branch {
   managerId?: string;
 }
 
-export type CustomerType = 'new' | 'returning';
+export type CustomerType = 'new' | 'returning' | 'archived';
 
 export interface Customer {
   id: string;
