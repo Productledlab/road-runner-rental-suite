@@ -43,11 +43,8 @@ const VehicleTable = ({ branchId, userRole = '' }: VehicleTableProps) => {
   const [viewingVehicle, setViewingVehicle] = useState<Vehicle | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
-  const [isKmDialogOpen, setIsKmDialogOpen] = useState(false); 
   const [isBookingDialogOpen, setIsBookingDialogOpen] = useState(false);
   const [selectedVehicleForBooking, setSelectedVehicleForBooking] = useState<Vehicle | null>(null);
-  const [currentKm, setCurrentKm] = useState<number>(0);
-  const [editingVehicleKm, setEditingVehicleKm] = useState<Vehicle | null>(null);
   const { toast } = useToast();
   const { t } = useLanguage();
   
@@ -132,16 +129,6 @@ const VehicleTable = ({ branchId, userRole = '' }: VehicleTableProps) => {
   };
 
   const handleEdit = (vehicle: Vehicle) => {
-    // Only admin can edit vehicles
-    if (userRole !== 'admin') {
-      toast({
-        title: t('accessDenied'),
-        description: t('onlyAdminCanEditVehicles'),
-        variant: 'destructive'
-      });
-      return;
-    }
-
     setEditingVehicle(vehicle);
     setIsDialogOpen(true);
   };
@@ -151,50 +138,7 @@ const VehicleTable = ({ branchId, userRole = '' }: VehicleTableProps) => {
     setIsViewDialogOpen(true);
   };
 
-  const handleEditKm = (vehicle: Vehicle) => {
-    // Branch users can only edit km
-    setEditingVehicleKm(vehicle);
-    setCurrentKm(vehicle.currentKm || 0);
-    setIsKmDialogOpen(true);
-  };
-
-  const handleUpdateKm = () => {
-    if (!editingVehicleKm) return;
-    
-    // Update vehicle km
-    const updatedVehicle = {
-      ...editingVehicleKm,
-      currentKm: currentKm
-    };
-    
-    saveVehicle(updatedVehicle);
-    
-    // Update local state
-    const updatedVehicles = vehicles.map(vehicle => 
-      vehicle.id === updatedVehicle.id ? updatedVehicle : vehicle
-    );
-    
-    setVehicles(updatedVehicles);
-    setFilteredVehicles(updatedVehicles);
-    setIsKmDialogOpen(false);
-    
-    toast({
-      title: t('vehicleKmUpdated'),
-      description: t('vehicleKmHasBeenUpdatedTo', { km: currentKm.toString() })
-    });
-  };
-
   const handleVehicleUpdate = (updatedVehicle: Vehicle) => {
-    // Additional check to ensure only admin can save vehicle changes
-    if (userRole !== 'admin') {
-      toast({
-        title: t('accessDenied'),
-        description: t('onlyAdminCanManageVehicles'),
-        variant: 'destructive'
-      });
-      return;
-    }
-
     // Save to local storage
     saveVehicle(updatedVehicle);
     
@@ -377,34 +321,22 @@ const VehicleTable = ({ branchId, userRole = '' }: VehicleTableProps) => {
                       </Button>
                     )}
                     
-                    {userRole !== 'admin' && (
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleEdit(vehicle)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    
+                    {canManageVehicles && (
                       <Button 
                         variant="outline" 
                         size="sm"
-                        onClick={() => handleEditKm(vehicle)}
+                        onClick={() => handleArchive(vehicle.id)}
                       >
-                        <Edit className="h-4 w-4 mr-1" />
-                        <span className="hidden sm:inline">{t('updateKm')}</span>
+                        <Archive className="h-4 w-4" />
                       </Button>
-                    )}
-                    
-                    {canManageVehicles && (
-                      <>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => handleEdit(vehicle)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => handleArchive(vehicle.id)}
-                        >
-                          <Archive className="h-4 w-4" />
-                        </Button>
-                      </>
                     )}
                   </div>
                 </TableCell>
@@ -463,34 +395,6 @@ const VehicleTable = ({ branchId, userRole = '' }: VehicleTableProps) => {
               preselectedVehicleId={selectedVehicleForBooking.id}
             />
           )}
-        </DialogContent>
-      </Dialog>
-
-      {/* KM Update dialog for branch users */}
-      <Dialog open={isKmDialogOpen} onOpenChange={setIsKmDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>{t('updateVehicleKm')}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="currentKm">{t('currentKm')}</Label>
-              <Input
-                id="currentKm"
-                type="number"
-                value={currentKm}
-                onChange={(e) => setCurrentKm(Number(e.target.value))}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsKmDialogOpen(false)}>
-              {t('cancel')}
-            </Button>
-            <Button onClick={handleUpdateKm} className="bg-rental-600 hover:bg-rental-700 text-white">
-              {t('update')}
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

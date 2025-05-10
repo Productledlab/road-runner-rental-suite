@@ -523,21 +523,6 @@ const BookingForm = ({ initialData, onSubmit, onCancel, isCompleting = false, us
   // Determine which fields are editable
   const isCompletedBooking = initialData?.status === 'completed' && !isCompleting;
   const isBranchUser = userRole !== 'admin';
-  
-  // If branch user is completing a booking, they can only edit price and end KM
-  const canOnlyEditPriceAndEndKm = isCompleting && isBranchUser;
-  
-  // If we have a preselected vehicle, load its data for display
-  useEffect(() => {
-    if (preselectedVehicleId && startDate && endDate) {
-      // Check if the vehicle is available for the selected dates
-      checkVehicleAvailability(
-        startDate.toISOString(),
-        endDate.toISOString(),
-        preselectedVehicleId
-      );
-    }
-  }, [preselectedVehicleId, startDate, endDate]);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -616,7 +601,7 @@ const BookingForm = ({ initialData, onSubmit, onCancel, isCompleting = false, us
               <Button
                 variant="outline"
                 className={`w-full justify-start text-left ${!startDate && 'text-muted-foreground'}`}
-                disabled={isCompleting || isCompletedBooking || canOnlyEditPriceAndEndKm}
+                disabled={isCompleting || isCompletedBooking}
                 type="button"
               >
                 {startDate ? format(startDate, 'PPP') : t('selectStartDate')}
@@ -643,7 +628,7 @@ const BookingForm = ({ initialData, onSubmit, onCancel, isCompleting = false, us
               <Button
                 variant="outline"
                 className={`w-full justify-start text-left ${!endDate && 'text-muted-foreground'}`}
-                disabled={isCompleting || isCompletedBooking || canOnlyEditPriceAndEndKm}
+                disabled={isCompleting || isCompletedBooking}
                 type="button"
               >
                 {endDate ? format(endDate, 'PPP') : t('selectEndDate')}
@@ -670,7 +655,7 @@ const BookingForm = ({ initialData, onSubmit, onCancel, isCompleting = false, us
             <Select 
               value={formData.vehicleId} 
               onValueChange={(value) => handleChange('vehicleId', value)}
-              disabled={isCompleting || isCompletedBooking || canOnlyEditPriceAndEndKm || !startDate || !endDate}
+              disabled={isCompleting || isCompletedBooking || !startDate || !endDate}
             >
               <SelectTrigger>
                 <SelectValue placeholder={(!startDate || !endDate) ? t('selectDatesFirst') : t('selectVehicle')} />
@@ -702,7 +687,7 @@ const BookingForm = ({ initialData, onSubmit, onCancel, isCompleting = false, us
             value={formData.startKm || 0}
             onChange={(e) => handleChange('startKm', parseFloat(e.target.value))}
             placeholder="0"
-            disabled={isCompleting || isCompletedBooking || canOnlyEditPriceAndEndKm}
+            disabled={isCompleting || isCompletedBooking}
           />
           {errors.startKm && <p className="text-sm text-red-500">{errors.startKm}</p>}
         </div>
@@ -718,7 +703,7 @@ const BookingForm = ({ initialData, onSubmit, onCancel, isCompleting = false, us
               value={formData.endKm || 0}
               onChange={(e) => handleChange('endKm', parseFloat(e.target.value))}
               placeholder="0"
-              disabled={isCompleting || isCompletedBooking}
+              disabled={isCompletedBooking} // Only disable if it's a completed booking but not in completing mode
             />
             {errors.endKm && <p className="text-sm text-red-500">{errors.endKm}</p>}
           </div>
