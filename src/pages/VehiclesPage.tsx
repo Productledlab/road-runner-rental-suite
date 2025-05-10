@@ -46,7 +46,7 @@ const VehiclesPage = () => {
     });
     setIsDialogOpen(false);
     
-    // No need to reload the page anymore
+    // Reload the page to refresh the vehicle list
     setTimeout(() => {
       window.location.reload();
     }, 500);
@@ -56,6 +56,9 @@ const VehiclesPage = () => {
     setSelectedBranch(branchId);
   };
 
+  // Only allow admin to add new vehicles
+  const showAddButton = userRole === 'admin';
+
   return (
     <AppLayout>
       <div className="space-y-6">
@@ -63,16 +66,21 @@ const VehiclesPage = () => {
           <h1 className="page-title">{t('vehicles')}</h1>
           <div className="flex items-center gap-4">
             <BranchSelector onChange={handleBranchChange} />
-            <Button 
-              onClick={() => setIsDialogOpen(true)}
-              className="bg-rental-600 hover:bg-rental-700 text-white"
-            >
-              {t('addNewVehicle')}
-            </Button>
+            {showAddButton && (
+              <Button 
+                onClick={() => setIsDialogOpen(true)}
+                className="bg-rental-600 hover:bg-rental-700 text-white"
+              >
+                {t('addNewVehicle')}
+              </Button>
+            )}
           </div>
         </div>
         
-        <VehicleTable branchId={selectedBranch === 'all' ? undefined : selectedBranch || undefined} />
+        <VehicleTable 
+          branchId={selectedBranch === 'all' ? undefined : selectedBranch || undefined} 
+          userRole={userRole || ''}
+        />
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -81,6 +89,7 @@ const VehiclesPage = () => {
             initialData={null}
             onSubmit={handleAddVehicle}
             onCancel={() => setIsDialogOpen(false)}
+            userRole={userRole || ''}
           />
         </DialogContent>
       </Dialog>

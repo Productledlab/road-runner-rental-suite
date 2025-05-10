@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -14,7 +15,7 @@ import { Vehicle, VehicleStatus, VehicleType, FuelType } from '@/lib/types';
 import { Edit, Archive, Eye, Calendar } from 'lucide-react';
 import VehicleForm from './VehicleForm';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { getVehicles, saveVehicle, archiveVehicle } from '@/lib/storage-service';
+import { getVehicles, saveVehicle, archiveVehicle, saveBooking } from '@/lib/storage-service';
 import { useToast } from '@/hooks/use-toast';
 import VehicleDetails from './VehicleDetails';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -22,6 +23,7 @@ import BookingForm from '../bookings/BookingForm';
 
 interface VehicleTableProps {
   branchId?: string;
+  userRole?: string;
 }
 
 const statusColors = {
@@ -31,7 +33,7 @@ const statusColors = {
   archived: 'bg-gray-100 text-gray-800',
 };
 
-const VehicleTable = ({ branchId }: VehicleTableProps) => {
+const VehicleTable = ({ branchId, userRole = '' }: VehicleTableProps) => {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [filteredVehicles, setFilteredVehicles] = useState<Vehicle[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -41,20 +43,15 @@ const VehicleTable = ({ branchId }: VehicleTableProps) => {
   const [viewingVehicle, setViewingVehicle] = useState<Vehicle | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
-  const [userRole, setUserRole] = useState<string>('');
+  const [isKmDialogOpen, setIsKmDialogOpen] = useState(false); 
   const [isBookingDialogOpen, setIsBookingDialogOpen] = useState(false);
   const [selectedVehicleForBooking, setSelectedVehicleForBooking] = useState<Vehicle | null>(null);
+  const [currentKm, setCurrentKm] = useState<number>(0);
+  const [editingVehicleKm, setEditingVehicleKm] = useState<Vehicle | null>(null);
   const { toast } = useToast();
   const { t } = useLanguage();
   
   useEffect(() => {
-    // Get user role
-    const userString = localStorage.getItem('user');
-    if (userString) {
-      const user = JSON.parse(userString);
-      setUserRole(user.role || '');
-    }
-    
     // Load vehicles from local storage
     const loadedVehicles = getVehicles();
     setVehicles(loadedVehicles);
@@ -154,6 +151,39 @@ const VehicleTable = ({ branchId }: VehicleTableProps) => {
     setIsViewDialogOpen(true);
   };
 
+  const handleEditKm = (vehicle: Vehicle) => {
+    // Branch users can only edit km
+    setEditingVehicleKm(vehicle);
+    setCurrentKm(vehicle.currentKm || 0);
+    setIsKmDialogOpen(true);
+  };
+
+  const handleUpdateKm = () => {
+    if (!editingVehicleKm) return;
+    
+    // Update vehicle km
+    const updatedVehicle = {
+      ...editingVehicleKm,
+      currentKm: currentKm
+    };
+    
+    saveVehicle(updatedVehicle);
+    
+    // Update local state
+    const updatedVehicles = vehicles.map(vehicle => 
+      vehicle.id === updatedVehicle.id ? updatedVehicle : vehicle
+    );
+    
+    setVehicles(updatedVehicles);
+    setFilteredVehicles(updatedVehicles);
+    setIsKmDialogOpen(false);
+    
+    toast({
+      title: t('vehicleKmUpdated'),
+      description: t('vehicleKmHasBeenUpdatedTo', { km: currentKm.toString() })
+    });
+  };
+
   const handleVehicleUpdate = (updatedVehicle: Vehicle) => {
     // Additional check to ensure only admin can save vehicle changes
     if (userRole !== 'admin') {
@@ -197,19 +227,34 @@ const VehicleTable = ({ branchId }: VehicleTableProps) => {
     setIsBookingDialogOpen(true);
   };
 
-  const handleBookingCreated = () => {
-    // Refresh vehicle list after booking is created
-    const updatedVehicles = getVehicles();
-    setVehicles(updatedVehicles);
-    setFilteredVehicles(updatedVehicles);
+  const handleBookingCreated = (newBooking: any) => {
+    // Save the booking to storage
+    saveBooking(newBooking);
+    
+    // Mark the vehicle as booked
+    const updatedVehicle = vehicles.find(v => v.id === newBooking.vehicleId);
+    if (updatedVehicle) {
+      updatedVehicle.status = 'booked' as VehicleStatus;
+      saveVehicle(updatedVehicle);
+    }
+    
+    // Close dialog
     setIsBookingDialogOpen(false);
     
+    // Show notification
     toast({
       title: t('bookingCreated'),
       description: t('bookingCreatedSuccessfully'),
     });
     
-    // Redirect to the bookings page after a short delay
+    // Refresh the vehicle list
+    const updatedVehicles = getVehicles();
+    setVehicles(updatedVehicles);
+    
+    // Apply current filters to the updated list
+    applyFilters(searchTerm, selectedStatus, selectedType);
+    
+    // Redirect to bookings page after a short delay
     setTimeout(() => {
       window.location.href = '/bookings';
     }, 1500);
@@ -332,6 +377,17 @@ const VehicleTable = ({ branchId }: VehicleTableProps) => {
                       </Button>
                     )}
                     
+                    {userRole !== 'admin' && (
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleEditKm(vehicle)}
+                      >
+                        <Edit className="h-4 w-4 mr-1" />
+                        <span className="hidden sm:inline">{t('updateKm')}</span>
+                      </Button>
+                    )}
+                    
                     {canManageVehicles && (
                       <>
                         <Button 
@@ -365,6 +421,7 @@ const VehicleTable = ({ branchId }: VehicleTableProps) => {
         </Table>
       </div>
 
+      {/* Edit dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
@@ -379,6 +436,7 @@ const VehicleTable = ({ branchId }: VehicleTableProps) => {
         </DialogContent>
       </Dialog>
 
+      {/* View dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
         <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
@@ -388,6 +446,7 @@ const VehicleTable = ({ branchId }: VehicleTableProps) => {
         </DialogContent>
       </Dialog>
 
+      {/* Booking dialog */}
       <Dialog open={isBookingDialogOpen} onOpenChange={setIsBookingDialogOpen}>
         <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
@@ -404,6 +463,34 @@ const VehicleTable = ({ branchId }: VehicleTableProps) => {
               preselectedVehicleId={selectedVehicleForBooking.id}
             />
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* KM Update dialog for branch users */}
+      <Dialog open={isKmDialogOpen} onOpenChange={setIsKmDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t('updateVehicleKm')}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="currentKm">{t('currentKm')}</Label>
+              <Input
+                id="currentKm"
+                type="number"
+                value={currentKm}
+                onChange={(e) => setCurrentKm(Number(e.target.value))}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsKmDialogOpen(false)}>
+              {t('cancel')}
+            </Button>
+            <Button onClick={handleUpdateKm} className="bg-rental-600 hover:bg-rental-700 text-white">
+              {t('update')}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

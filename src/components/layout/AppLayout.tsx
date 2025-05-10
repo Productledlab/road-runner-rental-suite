@@ -4,7 +4,6 @@ import Sidebar from './Sidebar';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { LogOut } from 'lucide-react';
-import { useState } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface AppLayoutProps {
@@ -21,11 +20,11 @@ const AppLayout = ({ children }: AppLayoutProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen bg-gray-50 flex" dir={language === 'ar' ? 'rtl' : 'ltr'}>
       <Sidebar />
       
-      <div className="flex-1 flex flex-col overflow-hidden md:ml-64">
-        <header className="bg-white shadow-sm z-10">
+      <div className="flex-1 flex flex-col min-h-screen md:ml-64 w-full">
+        <header className="bg-white shadow-sm z-10 sticky top-0">
           <div className="px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
             <h1 className="text-xl font-semibold text-rental-800 ml-10 md:ml-0">Road Runner Rentals</h1>
             <Button variant="ghost" onClick={handleLogout}>
@@ -35,7 +34,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
           </div>
         </header>
         
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 w-full h-full relative">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 w-full">
           {children}
         </main>
       </div>

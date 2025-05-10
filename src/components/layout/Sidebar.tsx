@@ -1,4 +1,3 @@
-
 import { NavLink } from 'react-router-dom';
 import { 
   CarFront, 
@@ -64,7 +63,7 @@ const Sidebar = () => {
         </Button>
       </div>
       
-      <div className={`${displayClass} w-64 h-screen bg-rental-600 text-white flex flex-col z-20`} dir={language === 'ar' ? 'rtl' : 'ltr'}>
+      <div className={`${displayClass} w-64 h-screen bg-rental-600 text-white flex flex-col fixed md:sticky top-0 z-20`} dir={language === 'ar' ? 'rtl' : 'ltr'}>
         <div className="p-6">
           <h2 className="text-2xl font-bold">Road Runner</h2>
         </div>
@@ -136,7 +135,7 @@ const Sidebar = () => {
               </NavLink>
             </li>
             
-            {/* Only show Archived Vehicles link for admin users */}
+            {/* Only show Archived link for admin users - Changed text from "Archived Vehicles" to "Archived" */}
             {userRole === 'admin' && (
               <li>
                 <NavLink 
@@ -151,7 +150,7 @@ const Sidebar = () => {
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   <Archive className={`h-5 w-5 ${language === 'ar' ? 'ml-3' : 'mr-3'}`} />
-                  <span>{t('archivedVehicles')}</span>
+                  <span>{t('archived')}</span>
                 </NavLink>
               </li>
             )}
@@ -177,7 +176,7 @@ const Sidebar = () => {
           </ul>
         </nav>
         
-        <div className="px-6 py-4 bg-rental-700">
+        <div className="px-6 py-4 bg-rental-700 sticky bottom-0">
           <div className="flex flex-col space-y-2">
             <div className="text-sm">
               <p className="opacity-80">{t('loggedInAs')}</p>

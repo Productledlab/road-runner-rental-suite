@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -12,7 +11,7 @@ import { format } from 'date-fns';
 import BookingForm from './BookingForm';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { getBookings, getCustomers, getVehicles, saveBooking } from '@/lib/storage-service';
+import { getBookings, getCustomers, getVehicles, saveBooking, getBranches } from '@/lib/storage-service';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -53,6 +52,7 @@ const BookingTable = ({ branchId }: BookingTableProps) => {
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [viewingBooking, setViewingBooking] = useState<Booking | null>(null);
   const [userRole, setUserRole] = useState<string>('');
+  const [branches, setBranches] = useState<{[key: string]: string}>({});
   const { toast } = useToast();
   const { t } = useLanguage();
 
@@ -71,6 +71,14 @@ const BookingTable = ({ branchId }: BookingTableProps) => {
       
     setBookings(filteredByRole);
     setFilteredBookings(filteredByRole);
+    
+    // Load branch information
+    const branchList = getBranches();
+    const branchMap: {[key: string]: string} = {};
+    branchList.forEach(branch => {
+      branchMap[branch.id] = branch.name;
+    });
+    setBranches(branchMap);
   }, [branchId]);
 
   const applyFilters = () => {
@@ -317,6 +325,10 @@ const BookingTable = ({ branchId }: BookingTableProps) => {
               <TableHead>{t('status')}</TableHead>
               <TableHead>{t('totalPrice')}</TableHead>
               <TableHead>{t('kmDriven')}</TableHead>
+              {/* Add branch column for admin users */}
+              {userRole === 'admin' && (
+                <TableHead>{t('branch')}</TableHead>
+              )}
               <TableHead>{t('actions')}</TableHead>
             </TableRow>
           </TableHeader>
@@ -344,6 +356,12 @@ const BookingTable = ({ branchId }: BookingTableProps) => {
                   <TableCell>
                     {booking.kmDriven ? `${booking.kmDriven} km` : '-'}
                   </TableCell>
+                  {/* Show branch info for admin users */}
+                  {userRole === 'admin' && (
+                    <TableCell>
+                      {branches[booking.branchId] || booking.branchId || '-'}
+                    </TableCell>
+                  )}
                   <TableCell className="space-x-2">
                     <Button 
                       variant="outline" 
@@ -378,7 +396,7 @@ const BookingTable = ({ branchId }: BookingTableProps) => {
             })}
             {filteredBookings.length === 0 && (
               <TableRow>
-                <TableCell colSpan={9} className="h-24 text-center">
+                <TableCell colSpan={userRole === 'admin' ? 10 : 9} className="h-24 text-center">
                   {t('noBookingsFound')}
                 </TableCell>
               </TableRow>
