@@ -498,7 +498,7 @@ const BookingForm = ({ initialData, onSubmit, onCancel, isCompleting = false, us
           // Show toast notification about vehicle km update
           toast({
             title: t('vehicleKmUpdated'),
-            description: t('vehicleKmHasBeenUpdatedTo', { km: updatedBooking.endKm })
+            description: t('vehicleKmHasBeenUpdatedTo', { km: updatedBooking.endKm.toString() })
           });
         }
       }
