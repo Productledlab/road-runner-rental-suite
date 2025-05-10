@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Booking, BookingStatus, Customer } from '@/lib/types';
+import { Booking, BookingStatus, Customer, Vehicle, VehicleStatus } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { DialogFooter, DialogDescription } from '@/components/ui/dialog';
@@ -712,7 +712,7 @@ const BookingForm = ({ initialData, onSubmit, onCancel, isCompleting = false, us
               value={formData.endKm || 0}
               onChange={(e) => handleChange('endKm', parseFloat(e.target.value))}
               placeholder="0"
-              disabled={isCompletedBooking}
+              disabled={isCompleting || isCompletedBooking}
             />
             {errors.endKm && <p className="text-sm text-red-500">{errors.endKm}</p>}
           </div>
