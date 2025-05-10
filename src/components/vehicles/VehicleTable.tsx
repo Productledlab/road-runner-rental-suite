@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -204,6 +203,16 @@ const VehicleTable = ({ branchId }: VehicleTableProps) => {
     setVehicles(updatedVehicles);
     setFilteredVehicles(updatedVehicles);
     setIsBookingDialogOpen(false);
+    
+    toast({
+      title: t('bookingCreated'),
+      description: t('bookingCreatedSuccessfully'),
+    });
+    
+    // Redirect to the bookings page after a short delay
+    setTimeout(() => {
+      window.location.href = '/bookings';
+    }, 1500);
   };
 
   const statusOptions: VehicleStatus[] = ['available', 'booked', 'maintenance'];
@@ -390,7 +399,7 @@ const VehicleTable = ({ branchId }: VehicleTableProps) => {
           {selectedVehicleForBooking && (
             <BookingForm 
               initialData={null}
-              onSubmit={() => handleBookingCreated()}
+              onSubmit={handleBookingCreated}
               onCancel={() => setIsBookingDialogOpen(false)}
               preselectedVehicleId={selectedVehicleForBooking.id}
             />

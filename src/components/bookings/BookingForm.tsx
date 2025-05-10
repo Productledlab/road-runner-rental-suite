@@ -494,6 +494,12 @@ const BookingForm = ({ initialData, onSubmit, onCancel, isCompleting = false, us
             status: 'available' as VehicleStatus
           };
           saveVehicle(updatedVehicle);
+          
+          // Show toast notification about vehicle km update
+          toast({
+            title: t('vehicleKmUpdated'),
+            description: t('vehicleKmHasBeenUpdatedTo', { km: updatedBooking.endKm })
+          });
         }
       }
 

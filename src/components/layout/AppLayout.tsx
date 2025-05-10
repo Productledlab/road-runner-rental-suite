@@ -35,7 +35,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
           </div>
         </header>
         
-        <main className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-8 relative">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 w-full h-full relative">
           {children}
         </main>
       </div>
